@@ -393,6 +393,8 @@ function tryLoginWithPassword() {
     // Stats im Hintergrund laden (ohne Popups)
     loadStats().catch(() => {});
     updateOverviewKPIs();
+    startStatsAutoRefresh();
+
   } else {
     err.textContent = "Falsches Passwort.";
   }
@@ -489,6 +491,8 @@ async function resetStats() {
 
   /* ---------- STATS ---------- */
   let latestStats = null;
+  let statsAutoRefreshTimer = null;
+
 
   async function loadStats() {
     try {
@@ -510,6 +514,39 @@ async function resetStats() {
       `;
     }
   }
+function startStatsAutoRefresh() {
+  if (statsAutoRefreshTimer) return;
+
+  statsAutoRefreshTimer = setInterval(async () => {
+    if (!isUnlocked()) return;
+
+    try {
+      const data = await cloudGetStats();
+
+      // nur neu rendern, wenn total/today sich geändert haben
+      const newTotal = Number(data.total);
+      const newToday = Number(data.today);
+
+      if (!latestStats || newTotal !== latestStats.total || newToday !== latestStats.today) {
+        renderStatsFromData(data);
+      } else {
+        // Overview "Update"-Zeit trotzdem aktualisieren (optional)
+        if (!document.getElementById("overviewView").classList.contains("hidden")) {
+          latestStats.updatedAt = new Date();
+          updateOverviewKPIs();
+        }
+      }
+    } catch (e) {
+      console.warn("Auto-Refresh Stats fehlgeschlagen:", e);
+    }
+  }, 1000);
+}
+
+function stopStatsAutoRefresh() {
+  if (!statsAutoRefreshTimer) return;
+  clearInterval(statsAutoRefreshTimer);
+  statsAutoRefreshTimer = null;
+}
 
   async function addDrink(amount) {
     try {
@@ -597,79 +634,96 @@ async function resetStats() {
   }
 
   /* ---------- RACE ---------- */
-  let raceData = [];
-  let finishDistance = 10;
-  let selectedPlayer = null;
-  let moveHistory = []; // Stack für Undo
+let raceData = [];
+let finishDistance = 10;
+let selectedPlayer = null;
 
-  function startRace() {
-    window.GAME_ACTIVE = true;
+let moveHistory = []; // Stack für Undo
+let drinkBusy = false; // verhindert Doppelklick-Spam (FEHLTE bei dir!)
 
-    const count = Number(document.getElementById('players').value);
-    finishDistance = Number(document.getElementById('distance').value);
+ function startRace() {
+  window.GAME_ACTIVE = true;
 
-    raceData = [];
-    moveHistory = [];
-    document.getElementById('track').innerHTML = '';
-    document.getElementById('playerPicker').innerHTML = '';
+  const count = Number(document.getElementById('players').value);
+  finishDistance = Number(document.getElementById('distance').value);
 
-    document.getElementById('raceSetup').classList.add('hidden');
-    document.getElementById('raceUI').classList.remove('hidden');
-    document.getElementById('actionPanel').classList.add('hidden');
-    selectedPlayer = null;
-    document.getElementById('selectedPlayerLabel').innerText = '-';
+  raceData = [];
+  moveHistory = [];
+  selectedPlayer = null;
 
-    for (let i = 0; i < count; i++) {
-      raceData.push({ points: 0, color: `hsl(${i * 360 / count}, 80%, 60%)` });
+  document.getElementById('track').innerHTML = '';
+  document.getElementById('playerPicker').innerHTML = '';
 
-      const lane = document.createElement('div');
-      lane.className = 'lane';
+  // Setup ausblenden, Race-UI einblenden
+  document.getElementById('raceSetup').classList.add('hidden');
+  document.getElementById('raceUI').classList.remove('hidden');
 
-      const car = document.createElement('div');
-      car.className = 'car';
-      car.style.background = raceData[i].color;
-      car.id = 'car-' + i;
+  // ✅ WICHTIG: ActionPanel verstecken, weil noch kein Spieler gewählt ist
+  document.getElementById('actionPanel').classList.add('hidden');
+  document.getElementById('selectedPlayerLabel').innerText = '-';
 
-      lane.appendChild(car);
-      document.getElementById('track').appendChild(lane);
+  for (let i = 0; i < count; i++) {
+    raceData.push({ points: 0, color: `hsl(${i * 360 / count}, 80%, 60%)` });
 
-      const picker = document.createElement('button');
-      picker.className = 'player-btn';
-      picker.innerText = `Spieler ${i + 1}`;
-      picker.style.background = raceData[i].color;
-      picker.onclick = () => {
-        selectedPlayer = i;
-        document.getElementById('selectedPlayerLabel').innerText = `Spieler ${i + 1}`;
-        document.getElementById('actionPanel').classList.remove('hidden');
-      };
+    const lane = document.createElement('div');
+    lane.className = 'lane';
 
-      document.getElementById('playerPicker').appendChild(picker);
-    }
+    const car = document.createElement('div');
+    car.className = 'car';
+    car.style.background = raceData[i].color;
+    car.id = 'car-' + i;
 
-    if (!document.getElementById("overviewView").classList.contains("hidden")) {
-      mountGameIntoOverviewIfActive();
-    }
+    lane.appendChild(car);
+    document.getElementById('track').appendChild(lane);
+
+    const picker = document.createElement('button');
+    picker.className = 'player-btn';
+    picker.innerText = `Spieler ${i + 1}`;
+    picker.style.background = raceData[i].color;
+
+    picker.onclick = () => {
+      selectedPlayer = i;
+      document.getElementById('selectedPlayerLabel').innerText = `Spieler ${i + 1}`;
+
+      // ✅ jetzt darf das Panel erscheinen
+      document.getElementById('actionPanel').classList.remove('hidden');
+    };
+
+    document.getElementById('playerPicker').appendChild(picker);
   }
 
-  function undoLastMove() {
+  if (!document.getElementById("overviewView").classList.contains("hidden")) {
+    mountGameIntoOverviewIfActive();
+  }
+}
+
+ async function undoLastMove() {
+  if (drinkBusy) return;
+
   if (!moveHistory.length) {
     alert("Nichts zum Rückgängig machen.");
     return;
   }
+
   const last = moveHistory.pop();
+  drinkBusy = true;
 
-  // Punkte zurückdrehen
-  raceData[last.player].points = Math.max(0, raceData[last.player].points - last.points);
-  redrawCarPosition(last.player);
+  try {
+    // 1) Rennen zurück
+    raceData[last.player].points = Math.max(0, raceData[last.player].points - last.points);
+    redrawCarPosition(last.player);
 
-  // Optional: Statistik ebenfalls zurückdrehen (nur wenn Backend negative Werte erlaubt)
-  // Wenn dein Backend das NICHT kann, kommentiere den Block aus.
-  cloudAddDrink(-last.liters)
-    .then((data) => renderStatsFromData(data))
-    .catch((e) => {
-      console.warn("Undo konnte Statistik nicht syncen (Backend erlaubt evtl. keine negativen Werte):", e);
-      // Dann bleibt Undo nur fürs Rennen – Statistik bleibt wie sie ist.
-    });
+    // 2) Statistik zurück (nur wenn Backend negative Werte erlaubt!)
+    // Wenn dein Backend das nicht kann, kommentiere die nächsten 2 Zeilen aus.
+    await addDrink(-last.liters);
+
+  } catch (e) {
+    console.warn("Undo konnte nicht vollständig synchronisiert werden:", e);
+    // History zurückpushen, damit Undo nicht verloren geht
+    moveHistory.push(last);
+  } finally {
+    drinkBusy = false;
+  }
 }
 
 function redrawCarPosition(index) {
@@ -693,10 +747,10 @@ function redrawCarPosition(index) {
   drinkBusy = true;
 
   try {
-    // 1) erst Statistik syncen (damit Spiel nicht "weiterläuft", wenn Backend down ist)
-    await addDrink(0.5); // Statistik: immer 0,5L
+    // erst Statistik syncen
+    await addDrink(0.5);
 
-    // 2) Undo-History speichern (für Rückgängig)
+    // dann History + Move
     moveHistory.push({
       player: selectedPlayer,
       points,
@@ -704,16 +758,15 @@ function redrawCarPosition(index) {
       ts: Date.now()
     });
 
-    // 3) erst danach Auto bewegen
     moveCar(selectedPlayer, points);
 
   } catch (e) {
-    // addDrink macht schon alert; hier nur optionales Logging
     console.error("giveDrink failed:", e);
   } finally {
     drinkBusy = false;
   }
 }
+
 
   function moveCar(index, points) {
     raceData[index].points += points;
@@ -737,14 +790,20 @@ function redrawCarPosition(index) {
     }
   }
 
-  function resetRace() {
-    window.GAME_ACTIVE = false;
-    raceData = [];
-    document.getElementById('track').innerHTML = '';
-    document.getElementById('playerPicker').innerHTML = '';
-    document.getElementById('raceSetup').classList.remove('hidden');
-    document.getElementById('raceUI').classList.add('hidden');
-  }
+ function resetRace() {
+  window.GAME_ACTIVE = false;
+  raceData = [];
+  moveHistory = [];
+  selectedPlayer = null;
+
+  document.getElementById('track').innerHTML = '';
+  document.getElementById('playerPicker').innerHTML = '';
+  document.getElementById('raceSetup').classList.remove('hidden');
+  document.getElementById('raceUI').classList.add('hidden');
+  document.getElementById('actionPanel').classList.add('hidden');
+  document.getElementById('selectedPlayerLabel').innerText = '-';
+}
+
 
   /* ---------- GAME CONTAINER MANAGEMENT (Overview) ---------- */
   const gameRootEl = document.getElementById("race");
@@ -800,6 +859,8 @@ function redrawCarPosition(index) {
     // Stats laden ohne UI zu blocken
     loadStats().catch(() => {});
     updateOverviewKPIs();
+    
+  startStatsAutoRefresh();
   } else {
     showLogin();
     setUserPill("Gesperrt");
@@ -813,12 +874,15 @@ function redrawCarPosition(index) {
 
   // Logout
   document.getElementById("btnLogout")?.addEventListener("click", () => {
-    lockApp();
-    document.getElementById("loginPassword").value = "";
-    document.getElementById("loginError").textContent = "";
-    showLogin();
-    setUserPill("Gesperrt");
-  });
+  lockApp();
+  stopStatsAutoRefresh();
+
+  document.getElementById("loginPassword").value = "";
+  document.getElementById("loginError").textContent = "";
+  showLogin();
+  setUserPill("Gesperrt");
+});
+
 });
 
 </script>
