@@ -107,6 +107,61 @@
       border-radius: 10px;
       margin: 10px 0;
     }
+    /* Modern large stat cards */
+    #statsContent {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    @media (max-width: 900px) {
+      #statsContent { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 480px) {
+      #statsContent { grid-template-columns: 1fr; }
+    }
+
+    .stat-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border-radius: 14px;
+      padding: 18px;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .stat-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .stat-icon {
+      font-size: 1.6rem;
+      opacity: 0.95;
+    }
+
+    .stat-value {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--light);
+    }
+
+    .stat-label {
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.75);
+    }
+
+    .stat-sub {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.6);
+    }
     .ghost {
       background: transparent;
       color: var(--accent);
@@ -331,13 +386,54 @@ function resetRace() {
 
   function renderStats() {
     const data = JSON.parse(localStorage.getItem(STATS_KEY));
-    const hours = (Date.now() - data.created) / 1000 / 3600;
+    const hours = Math.max(0.001, (Date.now() - data.created) / 1000 / 3600);
+    const lph = data.total / hours;
+    const level = Math.floor(data.total / 5);
 
     document.getElementById('statsContent').innerHTML = `
-      <p>🍺 Gesamt getrunken: <b>${data.total.toFixed(1)} L</b></p>
-      <p>📅 Heute: <b>${data.today.toFixed(1)} L</b></p>
-      <p>⏱️ Liter pro Stunde: <b>${(data.total / hours).toFixed(2)}</b></p>
-      <p>🤪 Bierwagen-Level: <b>${Math.floor(data.total / 5)}</b></p>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div>
+            <div class="stat-value">${data.total.toFixed(1)} L</div>
+            <div class="stat-label">🍺 Gesamt getrunken</div>
+          </div>
+          <div class="stat-icon">🍻</div>
+        </div>
+        <div class="stat-sub">Seit ${Math.round(hours)} Std · Level ${level}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-top">
+          <div>
+            <div class="stat-value">${data.today.toFixed(1)} L</div>
+            <div class="stat-label">📅 Heute</div>
+          </div>
+          <div class="stat-icon">📅</div>
+        </div>
+        <div class="stat-sub">Tageswert — frisch gezählt</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-top">
+          <div>
+            <div class="stat-value">${lph.toFixed(2)} L/h</div>
+            <div class="stat-label">⏱️ Liter pro Stunde</div>
+          </div>
+          <div class="stat-icon">⚡</div>
+        </div>
+        <div class="stat-sub">Durchschnitt seit Beginn</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-top">
+          <div>
+            <div class="stat-value">${level}</div>
+            <div class="stat-label">🤪 Bierwagen-Level</div>
+          </div>
+          <div class="stat-icon">🏆</div>
+        </div>
+        <div class="stat-sub">Je 5 L ein Level</div>
+      </div>
     `;
   }
 </script>
