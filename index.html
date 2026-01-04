@@ -706,14 +706,14 @@
 
     const showOverview = () => {
       // Blende den Login-Bereich aus
-      document.getElementById("login").classList.add("hidden");
+      document.getElementById("login-screen").style.display = "none";
 
       // Blende den Overview-Bereich ein
-      document.getElementById("overviewView").classList.remove("hidden");
+      document.getElementById("overview").style.display = "block";
     };
 
     // Verstecke den Overview-Bereich initial
-    document.getElementById("overviewView").classList.add("hidden");
+    document.getElementById("overview").style.display = "none";
 
     // Zeige das Passwort-Prompt
     passwordPrompt();
