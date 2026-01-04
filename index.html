@@ -439,13 +439,19 @@
 <script>
     /* ---------------- NAV ---------------- */
   function showSection(id) {
-    // wenn wir Overview verlassen: Game zurücksetzen
-    if (id !== "overviewView") restoreGameToNormalPlace();
+    if (id !== "overviewView") {
+      restoreGameToNormalPlace();
+    }
 
     document.getElementById('race').classList.add('hidden');
     document.getElementById('stats').classList.add('hidden');
     document.getElementById('overviewView').classList.add('hidden');
     document.getElementById(id).classList.remove('hidden');
+
+    if (id === "overviewView") {
+      updateOverviewKPIs();
+      mountGameIntoOverviewIfActive();
+    }
   }
 
   // Startansicht
@@ -453,12 +459,6 @@
     showSection('race');
     await loadStats(); // Warte auf das Laden der Statistiken
     updateOverviewKPIs(); // Initialisiere die Overview-KPIs
-  });
-
-  document.getElementById("nav-overview")?.addEventListener("click", () => {
-    showSection("overviewView");
-    updateOverviewKPIs();
-    mountGameIntoOverviewIfActive();
   });
 
   /* ---------------- RACE ---------------- */
@@ -544,6 +544,10 @@ function moveCar(index, points) {
     alert(`🏆 Spieler ${index + 1} gewinnt das Rennen!`);
     window.GAME_ACTIVE = false; // Spiel nicht mehr aktiv
     restoreGameToNormalPlace(); // Spiel zurück an ursprünglichen Platz
+
+    if (!document.getElementById("overviewView").classList.contains("hidden")) {
+      mountGameIntoOverviewIfActive();
+    }
   }
 }
 
@@ -582,7 +586,7 @@ async function cloudGetStats() {
   return await res.json();
 }
 
-async function cloudAddDrink(amount) {
+async function cloudAddDrink() {
   const res = await fetch(`${SUPABASE_URL}/functions/v1/add-drink`, {
     method: "POST",
     headers: {
