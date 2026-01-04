@@ -48,7 +48,7 @@
     }
 
     .hidden {
-      display: none !important;
+      display: none;
     }
 
     /* LOGIN */
@@ -111,19 +111,8 @@
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="login">
-  <div class="login-box">
-    <h1>🍺 Bierwagen Login</h1>
-    <input id="user" placeholder="Benutzername" />
-    <input id="pass" type="password" placeholder="Passwort" />
-    <button type="button" onclick="login()">Login</button>
-    <p id="loginError" style="color:#ffaaaa"></p>
-  </div>
-</div>
-
 <!-- APP -->
-<div id="app" class="hidden">
+<div id="app">
   <div class="container">
     <h1>🏁 Bierwagen Racing</h1>
 
@@ -162,39 +151,18 @@
 </div>
 
 <script>
-  /* ---------------- AUTH (simple, client-side) ---------------- */
-  const VALID_USER = "bierwagen";
-  const VALID_PASS = "1234"; // später ändern
-
-  function login() {
-  try {
-    const u = (document.getElementById('user')?.value || "").trim();
-    const p = (document.getElementById('pass')?.value || "").trim();
-
-    console.log("Login attempt:", u); // Debug
-
-    if (u === VALID_USER && p === VALID_PASS) {
-      document.getElementById('login').classList.add('hidden');
-      document.getElementById('app').classList.remove('hidden');
-
-      loadStats();
-      showSection('race'); // damit direkt was angezeigt wird
-    } else {
-      document.getElementById('loginError').innerText = "Falsche Login-Daten";
-    }
-  } catch (e) {
-    console.error("Login error:", e);
-    alert("Login-Fehler – schau in die Console (F12).");
-  }
-}
-
-
-  /* ---------------- NAV ---------------- */
+    /* ---------------- NAV ---------------- */
   function showSection(id) {
     document.getElementById('race').classList.add('hidden');
     document.getElementById('stats').classList.add('hidden');
     document.getElementById(id).classList.remove('hidden');
   }
+
+  // Startansicht
+  document.addEventListener('DOMContentLoaded', () => {
+    showSection('race');
+    loadStats();
+  });
 
   /* ---------------- RACE ---------------- */
   let raceData = [];
@@ -287,6 +255,3 @@
 
 </body>
 </html>
-
-
-
