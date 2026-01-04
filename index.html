@@ -451,10 +451,11 @@
     loadStats();
   });
 
-  document.getElementById("nav-overview")?.addEventListener("click", () => setView("overview"));
-
-  document.getElementById("nav-game")?.addEventListener("click", () => setView("game"));
-  document.getElementById("nav-stats")?.addEventListener("click", () => setView("stats"));
+  document.getElementById("nav-overview")?.addEventListener("click", () => {
+    showSection("overviewView");
+    updateOverviewKPIs();
+    mountGameIntoOverviewIfActive();
+  });
 
   /* ---------------- RACE ---------------- */
   let raceData = [];
@@ -515,6 +516,13 @@ function giveDrink(points) {
   // Statistik: jedes Getränk = 0.5 L
   addDrink(0.5);
   moveCar(selectedPlayer, points);
+
+  // Aktualisiere die Overview-KPIs, falls Overview aktiv ist
+  setTimeout(() => {
+    if (!document.getElementById("overviewView").classList.contains("hidden")) {
+      updateOverviewKPIs();
+    }
+  }, 0);
 }
 
 function moveCar(index, points) {
@@ -584,6 +592,8 @@ async function addDrink(amount) {
   }
 }
 
+let latestStats = null; // Globale Variable für die neuesten Statistiken
+
 function renderStatsFromData(data) {
   const createdMs = new Date(data.created).getTime();
   const hours = Math.max(0.001, (Date.now() - createdMs) / 1000 / 3600);
@@ -639,73 +649,34 @@ function renderStatsFromData(data) {
       <div class="stat-sub">Je 5 L ein Level</div>
     </div>
   `;
+
+  // Speichere die neuesten Statistiken in der globalen Variable
+  latestStats = {
+    total: total,
+    today: today,
+    lph: lph,
+    level: level,
+    updatedAt: new Date()
+  };
+}
+
+function updateOverviewKPIs(){
+  if (!latestStats) return;
+
+  document.getElementById("ov-total").textContent = `${latestStats.total.toFixed(1)} L`;
+  document.getElementById("ov-today").textContent = `${latestStats.today.toFixed(1)} L`;
+  document.getElementById("ov-lph").textContent   = `${latestStats.lph.toFixed(2)} L/h`;
+  document.getElementById("ov-level").textContent = `${latestStats.level}`;
+
+  document.getElementById("ov-partycode").textContent = `Party: ${ROOM_CODE}`;
+  document.getElementById("ov-updated").textContent = `Update: ${latestStats.updatedAt.toLocaleTimeString()}`;
 }
 
 
-  function addDrink(amount) {
-    const data = JSON.parse(localStorage.getItem(STATS_KEY));
-    data.total += amount;
-    data.today += amount;
-    localStorage.setItem(STATS_KEY, JSON.stringify(data));
-    renderStats();
-  }
+// --- SUPABASE CLOUD STATS ---
+const SUPABASE_URL = "https://vrthtvecnbhzgkkguaat.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_t3ZMUJeiE2ZKxDAQd1T87w_U1KE0nlg";
 
-  function renderStats() {
-    const data = JSON.parse(localStorage.getItem(STATS_KEY));
-    const hours = Math.max(0.001, (Date.now() - data.created) / 1000 / 3600);
-    const lph = data.total / hours;
-    const level = Math.floor(data.total / 5);
-
-    document.getElementById('statsContent').innerHTML = `
-      <div class="stat-card">
-        <div class="stat-top">
-          <div>
-            <div class="stat-value">${data.total.toFixed(1)} L</div>
-            <div class="stat-label">🍺 Gesamt getrunken</div>
-          </div>
-          <div class="stat-icon">🍻</div>
-        </div>
-        <div class="stat-sub">Seit ${Math.round(hours)} Std · Level ${level}</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-top">
-          <div>
-            <div class="stat-value">${data.today.toFixed(1)} L</div>
-            <div class="stat-label">📅 Heute</div>
-          </div>
-          <div class="stat-icon">📅</div>
-        </div>
-        <div class="stat-sub">Tageswert — frisch gezählt</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-top">
-          <div>
-            <div class="stat-value">${lph.toFixed(2)} L/h</div>
-            <div class="stat-label">⏱️ Liter pro Stunde</div>
-          </div>
-          <div class="stat-icon">⚡</div>
-        </div>
-        <div class="stat-sub">Durchschnitt seit Beginn</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-top">
-          <div>
-            <div class="stat-value">${level}</div>
-            <div class="stat-label">🤪 Bierwagen-Level</div>
-          </div>
-          <div class="stat-icon">🏆</div>
-        </div>
-        <div class="stat-sub">Je 5 L ein Level</div>
-      </div>
-    `;
-  }
-
-  // --- SUPABASE CLOUD STATS ---
-const SUPABASE_URL = "https://DEINPROJEKT.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_XXXXXXXXXXXX";
 
 // Party-Code (später machen wir UI dafür)
 let ROOM_CODE = localStorage.getItem("bierwagen_room") || "HB-2026";
@@ -761,24 +732,9 @@ function setView(name){
   }
 }
 
-function updateOverviewKPIs(){
-  const total = document.getElementById("totalLiters")?.textContent; // <- deine IDs
-  const today = document.getElementById("todayLiters")?.textContent;
-  const lph   = document.getElementById("litersPerHour")?.textContent;
-  const level = document.getElementById("bierwagenLevel")?.textContent;
-
-  if (total) document.getElementById("ov-total").textContent = total;
-  if (today) document.getElementById("ov-today").textContent = today;
-  if (lph)   document.getElementById("ov-lph").textContent   = lph;
-  if (level) document.getElementById("ov-level").textContent = level;
-
-  // Partycode / updated optional:
-  document.getElementById("ov-partycode").textContent = `Party: ${window.PARTY_CODE ?? "HB-2026"}`;
-  document.getElementById("ov-updated").textContent = `Update: ${new Date().toLocaleTimeString()}`;
-}
 
 // Game Container Management
-const gameRootEl = document.getElementById("track"); // angepasst an dein Spielelement
+const gameRootEl = document.getElementById("race"); // Verschiebe den gesamten Race-Block, nicht nur die Bahn
 const overviewHost = document.getElementById("overviewGameHost");
 let originalGameParent = gameRootEl?.parentElement;
 let originalGameNextSibling = gameRootEl?.nextSibling;
