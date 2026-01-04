@@ -439,6 +439,9 @@
 <script>
     /* ---------------- NAV ---------------- */
   function showSection(id) {
+    // wenn wir Overview verlassen: Game zurücksetzen
+    if (id !== "overviewView") restoreGameToNormalPlace();
+
     document.getElementById('race').classList.add('hidden');
     document.getElementById('stats').classList.add('hidden');
     document.getElementById('overviewView').classList.add('hidden');
@@ -446,9 +449,10 @@
   }
 
   // Startansicht
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     showSection('race');
-    loadStats();
+    await loadStats(); // Warte auf das Laden der Statistiken
+    updateOverviewKPIs(); // Initialisiere die Overview-KPIs
   });
 
   document.getElementById("nav-overview")?.addEventListener("click", () => {
@@ -503,6 +507,11 @@
       };
 
       document.getElementById('playerPicker').appendChild(picker);
+    }
+
+    // UX-Fix: Automatisch mounten, wenn Overview offen ist
+    if (!document.getElementById("overviewView").classList.contains("hidden")) {
+      mountGameIntoOverviewIfActive();
     }
   }
 
@@ -711,70 +720,6 @@ async function cloudAddDrink(amount) {
   return await res.json();
 }
 
-const views = {
-  game: document.getElementById("race"),        // angepasst an deine IDs
-  stats: document.getElementById("stats"),      // angepasst an deine IDs
-  overview: document.getElementById("overviewView")
-};
-
-function setView(name){
-  Object.entries(views).forEach(([key, el]) => {
-    if (!el) return;
-    el.classList.toggle("hidden", key !== name);
-  });
-
-  // Wenn Overview aktiv: Stats spiegeln und ggf. Spiel groß anzeigen
-  if (name === "overview") {
-    updateOverviewKPIs();
-    mountGameIntoOverviewIfActive();
-  } else {
-    restoreGameToNormalPlace();
-  }
-}
-
-
-// Game Container Management
-const gameRootEl = document.getElementById("race"); // Verschiebe den gesamten Race-Block, nicht nur die Bahn
-const overviewHost = document.getElementById("overviewGameHost");
-let originalGameParent = gameRootEl?.parentElement;
-let originalGameNextSibling = gameRootEl?.nextSibling;
-
-function isGameActive(){
-  // Einfachste Variante: setze beim StartRace() => window.GAME_ACTIVE = true;
-  // und beim Reset/Ende => false;
-  return !!window.GAME_ACTIVE;
-}
-
-function mountGameIntoOverviewIfActive(){
-  if (!gameRootEl || !overviewHost) return;
-
-  if (isGameActive()){
-    overviewHost.innerHTML = "";
-    overviewHost.appendChild(gameRootEl);
-  } else {
-    // Platzhalter anzeigen
-    overviewHost.innerHTML = `
-      <div class="placeholder">
-        <div class="placeholder-title">Kein Minispiel aktiv</div>
-        <div class="placeholder-sub">Starte ein Spiel, dann erscheint es hier groß.</div>
-      </div>
-    `;
-  }
-}
-
-function restoreGameToNormalPlace(){
-  if (!gameRootEl || !originalGameParent) return;
-
-  // Nur zurücksetzen, wenn es wirklich verschoben wurde
-  if (gameRootEl.parentElement !== originalGameParent){
-    if (originalGameNextSibling) {
-      originalGameParent.insertBefore(gameRootEl, originalGameNextSibling);
-    } else {
-      originalGameParent.appendChild(gameRootEl);
-    }
-  }
-}
-
 document.getElementById("btn-fullscreen")?.addEventListener("click", async () => {
   try {
     if (!document.fullscreenElement) {
@@ -792,5 +737,3 @@ document.getElementById("btn-fullscreen")?.addEventListener("click", async () =>
 </html>
 
 
-#sb_publishable_t3ZMUJeiE2ZKxDAQd1T87w_U1KE0nlg
-#https://vrthtvecnbhzgkkguaat.supabase.co
