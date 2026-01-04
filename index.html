@@ -227,6 +227,102 @@
       gap:12px;
       flex-wrap:wrap;
     }
+
+    /* OVERVIEW */
+    #overviewView {
+      margin-top: 20px;
+    }
+
+    .view.hidden { display: none; }
+
+    .overview-layout{
+      display: grid;
+      grid-template-columns: 1.1fr 1.9fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .overview-title{
+      font-size: clamp(20px, 2.2vw, 40px);
+      margin: 0 0 16px 0;
+    }
+
+    .kpi-grid{
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 16px;
+    }
+
+    .kpi-card{
+      padding: 18px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+
+    .kpi-label{
+      font-size: clamp(12px, 1.2vw, 18px);
+      opacity: 0.85;
+    }
+
+    .kpi-value{
+      margin-top: 8px;
+      font-weight: 800;
+      font-size: clamp(28px, 3.2vw, 64px);
+      line-height: 1.05;
+    }
+
+    .overview-meta{
+      margin-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: clamp(12px, 1.1vw, 16px);
+      opacity: 0.9;
+    }
+
+    .overview-content{
+      border-radius: 18px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 16px;
+      min-height: 60vh;
+    }
+
+    .overview-gamehost{
+      height: 100%;
+    }
+
+    .placeholder{
+      height: 100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      text-align:center;
+      gap: 10px;
+      opacity: 0.85;
+    }
+
+    .placeholder-title{
+      font-size: clamp(18px, 2vw, 36px);
+      font-weight: 700;
+    }
+
+    .placeholder-sub{
+      font-size: clamp(12px, 1.2vw, 18px);
+      max-width: 520px;
+    }
+
+    /* Mobile: untereinander */
+    @media (max-width: 900px){
+      .overview-layout{
+        grid-template-columns: 1fr;
+      }
+      .overview-content{
+        min-height: 40vh;
+      }
+    }
   </style>
 </head>
 <body>
@@ -239,6 +335,7 @@
     <div class="menu">
       <button onclick="showSection('race')">🏎️ Minispiel</button>
       <button onclick="showSection('stats')">📊 Statistik</button>
+      <button id="nav-overview" class="nav-btn">Overview</button>
     </div>
 
     <!-- RACE SETUP -->
@@ -288,6 +385,54 @@
       </div>
     </div>
 
+    <!-- OVERVIEW -->
+    <section id="overviewView" class="view hidden">
+      <div class="overview-layout">
+        
+        <!-- Links/Oben: Stats groß -->
+        <div class="overview-stats">
+          <h2 class="overview-title">Bierwagen Overview</h2>
+          
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-label">Gesamt (L)</div>
+              <div id="ov-total" class="kpi-value">–</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Heute (L)</div>
+              <div id="ov-today" class="kpi-value">–</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Liter / Stunde</div>
+              <div id="ov-lph" class="kpi-value">–</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Level</div>
+              <div id="ov-level" class="kpi-value">–</div>
+            </div>
+          </div>
+
+          <div class="overview-meta">
+            <span id="ov-partycode">Party: –</span>
+            <span id="ov-updated">Update: –</span>
+          </div>
+
+          <button id="btn-fullscreen" class="btn-secondary">Fullscreen</button>
+        </div>
+
+        <!-- Rechts/Unten: Aktives Spiel groß -->
+        <div class="overview-content">
+          <div id="overviewGameHost" class="overview-gamehost">
+            <div class="placeholder">
+              <div class="placeholder-title">Kein Minispiel aktiv</div>
+              <div class="placeholder-sub">Starte ein Spiel, dann erscheint es hier groß.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
   </div>
 </div>
 
@@ -296,6 +441,7 @@
   function showSection(id) {
     document.getElementById('race').classList.add('hidden');
     document.getElementById('stats').classList.add('hidden');
+    document.getElementById('overviewView').classList.add('hidden');
     document.getElementById(id).classList.remove('hidden');
   }
 
@@ -305,11 +451,18 @@
     loadStats();
   });
 
+  document.getElementById("nav-overview")?.addEventListener("click", () => setView("overview"));
+
+  document.getElementById("nav-game")?.addEventListener("click", () => setView("game"));
+  document.getElementById("nav-stats")?.addEventListener("click", () => setView("stats"));
+
   /* ---------------- RACE ---------------- */
   let raceData = [];
   let finishDistance = 10;
 
   function startRace() {
+    window.GAME_ACTIVE = true; // Spielstatus aktiv setzen
+
     const count = Number(document.getElementById('players').value);
     finishDistance = Number(document.getElementById('distance').value);
 
@@ -379,10 +532,14 @@ function moveCar(index, points) {
 
   if (raceData[index].points >= finishDistance) {
     alert(`🏆 Spieler ${index + 1} gewinnt das Rennen!`);
+    window.GAME_ACTIVE = false; // Spiel nicht mehr aktiv
+    restoreGameToNormalPlace(); // Spiel zurück an ursprünglichen Platz
   }
 }
 
 function resetRace() {
+  window.GAME_ACTIVE = false; // Spielstatus zurücksetzen
+
   // clear UI and data
   raceData = [];
   document.getElementById('track').innerHTML = '';
@@ -393,19 +550,97 @@ function resetRace() {
 
 
 
-  /* ---------------- STATS ---------------- */
-  const STATS_KEY = 'bierwagen_stats';
+/* ---------------- STATS (CLOUD via Supabase) ---------------- */
 
-  function loadStats() {
-    if (!localStorage.getItem(STATS_KEY)) {
-      localStorage.setItem(STATS_KEY, JSON.stringify({
-        total: 0,
-        today: 0,
-        created: Date.now()
-      }));
-    }
-    renderStats();
+async function loadStats() {
+  try {
+    const data = await cloudGetStats();
+    renderStatsFromData(data);
+  } catch (e) {
+    console.error("loadStats error:", e);
+    // Fallback Anzeige (optional)
+    document.getElementById('statsContent').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-top">
+          <div>
+            <div class="stat-value">—</div>
+            <div class="stat-label">Fehler beim Laden</div>
+          </div>
+          <div class="stat-icon">⚠️</div>
+        </div>
+        <div class="stat-sub">Check Internet / Supabase</div>
+      </div>
+    `;
   }
+}
+
+async function addDrink(amount) {
+  try {
+    const data = await cloudAddDrink(amount);
+    renderStatsFromData(data);
+  } catch (e) {
+    console.error("addDrink error:", e);
+    alert("Sync-Fehler (Internet?)");
+  }
+}
+
+function renderStatsFromData(data) {
+  const createdMs = new Date(data.created).getTime();
+  const hours = Math.max(0.001, (Date.now() - createdMs) / 1000 / 3600);
+
+  const total = Number(data.total);
+  const today = Number(data.today);
+
+  const lph = total / hours;
+  const level = Math.floor(total / 5);
+
+  document.getElementById('statsContent').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-top">
+        <div>
+          <div class="stat-value">${total.toFixed(1)} L</div>
+          <div class="stat-label">🍺 Gesamt getrunken</div>
+        </div>
+        <div class="stat-icon">🍻</div>
+      </div>
+      <div class="stat-sub">Seit ${Math.round(hours)} Std · Level ${level}</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-top">
+        <div>
+          <div class="stat-value">${today.toFixed(1)} L</div>
+          <div class="stat-label">📅 Heute</div>
+        </div>
+        <div class="stat-icon">📅</div>
+      </div>
+      <div class="stat-sub">Tageswert — frisch gezählt</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-top">
+        <div>
+          <div class="stat-value">${lph.toFixed(2)} L/h</div>
+          <div class="stat-label">⏱️ Liter pro Stunde</div>
+        </div>
+        <div class="stat-icon">⚡</div>
+      </div>
+      <div class="stat-sub">Durchschnitt seit Beginn</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-top">
+        <div>
+          <div class="stat-value">${level}</div>
+          <div class="stat-label">🤪 Bierwagen-Level</div>
+        </div>
+        <div class="stat-icon">🏆</div>
+      </div>
+      <div class="stat-sub">Je 5 L ein Level</div>
+    </div>
+  `;
+}
+
 
   function addDrink(amount) {
     const data = JSON.parse(localStorage.getItem(STATS_KEY));
@@ -504,6 +739,97 @@ async function cloudAddDrink(amount) {
   if (!res.ok) throw new Error(await res.text());
   return await res.json();
 }
+
+const views = {
+  game: document.getElementById("race"),        // angepasst an deine IDs
+  stats: document.getElementById("stats"),      // angepasst an deine IDs
+  overview: document.getElementById("overviewView")
+};
+
+function setView(name){
+  Object.entries(views).forEach(([key, el]) => {
+    if (!el) return;
+    el.classList.toggle("hidden", key !== name);
+  });
+
+  // Wenn Overview aktiv: Stats spiegeln und ggf. Spiel groß anzeigen
+  if (name === "overview") {
+    updateOverviewKPIs();
+    mountGameIntoOverviewIfActive();
+  } else {
+    restoreGameToNormalPlace();
+  }
+}
+
+function updateOverviewKPIs(){
+  const total = document.getElementById("totalLiters")?.textContent; // <- deine IDs
+  const today = document.getElementById("todayLiters")?.textContent;
+  const lph   = document.getElementById("litersPerHour")?.textContent;
+  const level = document.getElementById("bierwagenLevel")?.textContent;
+
+  if (total) document.getElementById("ov-total").textContent = total;
+  if (today) document.getElementById("ov-today").textContent = today;
+  if (lph)   document.getElementById("ov-lph").textContent   = lph;
+  if (level) document.getElementById("ov-level").textContent = level;
+
+  // Partycode / updated optional:
+  document.getElementById("ov-partycode").textContent = `Party: ${window.PARTY_CODE ?? "HB-2026"}`;
+  document.getElementById("ov-updated").textContent = `Update: ${new Date().toLocaleTimeString()}`;
+}
+
+// Game Container Management
+const gameRootEl = document.getElementById("track"); // angepasst an dein Spielelement
+const overviewHost = document.getElementById("overviewGameHost");
+let originalGameParent = gameRootEl?.parentElement;
+let originalGameNextSibling = gameRootEl?.nextSibling;
+
+function isGameActive(){
+  // Einfachste Variante: setze beim StartRace() => window.GAME_ACTIVE = true;
+  // und beim Reset/Ende => false;
+  return !!window.GAME_ACTIVE;
+}
+
+function mountGameIntoOverviewIfActive(){
+  if (!gameRootEl || !overviewHost) return;
+
+  if (isGameActive()){
+    overviewHost.innerHTML = "";
+    overviewHost.appendChild(gameRootEl);
+  } else {
+    // Platzhalter anzeigen
+    overviewHost.innerHTML = `
+      <div class="placeholder">
+        <div class="placeholder-title">Kein Minispiel aktiv</div>
+        <div class="placeholder-sub">Starte ein Spiel, dann erscheint es hier groß.</div>
+      </div>
+    `;
+  }
+}
+
+function restoreGameToNormalPlace(){
+  if (!gameRootEl || !originalGameParent) return;
+
+  // Nur zurücksetzen, wenn es wirklich verschoben wurde
+  if (gameRootEl.parentElement !== originalGameParent){
+    if (originalGameNextSibling) {
+      originalGameParent.insertBefore(gameRootEl, originalGameNextSibling);
+    } else {
+      originalGameParent.appendChild(gameRootEl);
+    }
+  }
+}
+
+document.getElementById("btn-fullscreen")?.addEventListener("click", async () => {
+  try {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen();
+    } else {
+      await document.exitFullscreen();
+    }
+  } catch (e) {
+    console.log("Fullscreen failed:", e);
+  }
+});
 </script>
 
 </body>
