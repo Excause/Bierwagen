@@ -480,99 +480,78 @@ function tryLoginWithPassword() {
     }
   }
 
-  import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-
-serve(async (req) => {
-  // ✅ CORS Preflight – MUSS 204 oder 200 sein
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      status: 204,
-      headers: corsHeaders,
-    });
-  }
-
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/json",
-      },
-    });
-  }
-
-  try {
-    const body = await req.json().catch(() => ({}));
-    const code = String(body.code || "").trim();
-    const amount = Number(body.amount);
-
-    if (!code || !Number.isFinite(amount) || amount <= 0) {
-      return new Response(JSON.stringify({ error: "Invalid code or amount" }), {
-        status: 400,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-        },
-      });
+  async function addDrink(amount) {
+    try {
+      const data = await cloudAddDrink(amount);
+      renderStatsFromData(data);
+    } catch (e) {
+      console.error("addDrink error:", e);
+      alert("Sync-Fehler: " + (e?.message || e));
     }
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      { auth: { persistSession: false } }
-    );
-
-    // Room sicherstellen
-    await supabase
-      .from("stats_rooms")
-      .upsert({ code }, { onConflict: "code" });
-
-    // Aktuelle Werte holen
-    const { data: row, error: readErr } = await supabase
-      .from("stats_rooms")
-      .select("total,today")
-      .eq("code", code)
-      .single();
-
-    if (readErr) throw readErr;
-
-    const total = Number(row.total ?? 0) + amount;
-    const today = Number(row.today ?? 0) + amount;
-
-    const { data, error } = await supabase
-      .from("stats_rooms")
-      .update({ total, today })
-      .eq("code", code)
-      .select("*")
-      .single();
-
-    if (error) throw error;
-
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/json",
-      },
-    });
-  } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), {
-      status: 500,
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/json",
-      },
-    });
   }
-});
 
+  function renderStatsFromData(data) {
+    const createdMs = new Date(data.created).getTime();
+    const hours = Math.max(0.001, (Date.now() - createdMs) / 1000 / 3600);
+
+    const total = Number(data.total);
+    const today = Number(data.today);
+
+    const lph = total / hours;
+    const level = Math.floor(total / 5);
+
+    document.getElementById('statsContent').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-top">
+          <div>
+            <div class="stat-value">${total.toFixed(1)} L</div>
+            <div class="stat-label">🍺 Gesamt getrunken</div>
+          </div>
+          <div class="stat-icon">🍻</div>
+        </div>
+        <div class="stat-sub">Seit ${Math.round(hours)} Std · Level ${level}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-top">
+          <div>
+            <div class="stat-value">${today.toFixed(1)} L</div>
+            <div class="stat-label">📅 Heute</div>
+          </div>
+          <div class="stat-icon">📅</div>
+        </div>
+        <div class="stat-sub">Tageswert — frisch gezählt</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-top">
+          <div>
+            <div class="stat-value">${lph.toFixed(2)} L/h</div>
+            <div class="stat-label">⏱️ Liter pro Stunde</div>
+          </div>
+          <div class="stat-icon">⚡</div>
+        </div>
+        <div class="stat-sub">Durchschnitt seit Beginn</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-top">
+          <div>
+            <div class="stat-value">${level}</div>
+            <div class="stat-label">🤪 Bierwagen-Level</div>
+          </div>
+          <div class="stat-icon">🏆</div>
+        </div>
+        <div class="stat-sub">Je 5 L ein Level</div>
+      </div>
+    `;
+
+    latestStats = { total, today, lph, level, updatedAt: new Date() };
+
+    if (!document.getElementById("overviewView").classList.contains("hidden")) {
+      updateOverviewKPIs();
+    }
+  }
 
   function updateOverviewKPIs(){
     if (!latestStats) return;
