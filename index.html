@@ -323,16 +323,17 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-  /* ---------------- SUPABASE AUTH CLIENT ---------------- */
+ <script>
   const SUPABASE_URL = "https://vrthtvecnbhzgkkguaat.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_t3ZMUJeiE2ZKxDAQd1T87w_U1KE0nlg";
 
-  const APP_PASSWORD = "1234"; // <-- dein Passwort
-
+  // Nur Passwort (Frontend-Schutz)
+  const APP_PASSWORD = "1234";
 
   // Party-Code
   let ROOM_CODE = localStorage.getItem("bierwagen_room") || "HB-2026";
 
+  /* ---------- Views ---------- */
   function showLogin() {
     document.getElementById("login").classList.remove("hidden");
     document.getElementById("app").classList.add("hidden");
@@ -345,34 +346,38 @@
 
   function setUserPill(text) {
     const pill = document.getElementById("userPill");
-    pill.textContent = text || "Offline";
+    if (pill) pill.textContent = text || "Offline";
   }
 
   function isUnlocked() {
     return localStorage.getItem("bierwagen_unlocked") === "1";
   }
-
   function unlockApp() {
     localStorage.setItem("bierwagen_unlocked", "1");
   }
-
   function lockApp() {
     localStorage.removeItem("bierwagen_unlocked");
   }
 
-  function ensureUnlockedOrShowLogin() {
-    if (!isUnlocked()) {
-      showLogin();
-      setUserPill("Gesperrt");
-      return false;
-    }
+  /* ---------- Password Login ---------- */
+  function tryLoginWithPassword() {
+    const pw = document.getElementById("loginPassword").value;
+    const err = document.getElementById("loginError");
 
-    showApp();
-    setUserPill("Zugang OK");
-    return true;
+    if (pw === APP_PASSWORD) {
+      unlockApp();
+      err.textContent = "";
+      showApp();
+      setUserPill("Zugang OK");
+      showSection("race");
+      loadStats();
+      updateOverviewKPIs();
+    } else {
+      err.textContent = "Falsches Passwort.";
+    }
   }
 
-  /* ---------------- NAV ---------------- */
+  /* ---------- NAV ---------- */
   function showSection(id) {
     if (id !== "overviewView") restoreGameToNormalPlace();
 
@@ -387,19 +392,146 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    showLogin();
-    setUserPill("Gesperrt");
+  /* ---------- Supabase Edge Functions (ohne JWT) ---------- */
+  async function cloudGetStats() {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/get-stats`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ code: ROOM_CODE }),
+    });
 
-    const ok = ensureUnlockedOrShowLogin();
-    if (!ok) return;
+    if (!res.ok) throw new Error(await res.text());
+    return await res.json();
+  }
 
-    showSection("race");
-    await loadStats();
-    updateOverviewKPIs();
-  });
+  async function cloudAddDrink(amount) {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/add-drink`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ code: ROOM_CODE, amount }),
+    });
 
-  /* ---------------- RACE ---------------- */
+    const text = await res.text();
+    if (!res.ok) throw new Error(text);
+    return JSON.parse(text);
+  }
+
+  /* ---------- STATS ---------- */
+  let latestStats = null;
+
+  async function loadStats() {
+    try {
+      const data = await cloudGetStats();
+      renderStatsFromData(data);
+    } catch (e) {
+      console.error("loadStats error:", e);
+      document.getElementById('statsContent').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-top">
+            <div>
+              <div class="stat-value">—</div>
+              <div class="stat-label">Fehler beim Laden</div>
+            </div>
+            <div class="stat-icon">⚠️</div>
+          </div>
+          <div class="stat-sub">${(e?.message || e)}</div>
+        </div>
+      `;
+    }
+  }
+
+  async function addDrink(amount) {
+    try {
+      const data = await cloudAddDrink(amount);
+      renderStatsFromData(data);
+    } catch (e) {
+      console.error("addDrink error:", e);
+      alert("Sync-Fehler: " + (e?.message || e));
+    }
+  }
+
+  function renderStatsFromData(data) {
+    const createdMs = new Date(data.created).getTime();
+    const hours = Math.max(0.001, (Date.now() - createdMs) / 1000 / 3600);
+
+    const total = Number(data.total);
+    const today = Number(data.today);
+
+    const lph = total / hours;
+    const level = Math.floor(total / 5);
+
+    document.getElementById('statsContent').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-top">
+          <div>
+            <div class="stat-value">${total.toFixed(1)} L</div>
+            <div class="stat-label">🍺 Gesamt getrunken</div>
+          </div>
+          <div class="stat-icon">🍻</div>
+        </div>
+        <div class="stat-sub">Seit ${Math.round(hours)} Std · Level ${level}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-top">
+          <div>
+            <div class="stat-value">${today.toFixed(1)} L</div>
+            <div class="stat-label">📅 Heute</div>
+          </div>
+          <div class="stat-icon">📅</div>
+        </div>
+        <div class="stat-sub">Tageswert — frisch gezählt</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-top">
+          <div>
+            <div class="stat-value">${lph.toFixed(2)} L/h</div>
+            <div class="stat-label">⏱️ Liter pro Stunde</div>
+          </div>
+          <div class="stat-icon">⚡</div>
+        </div>
+        <div class="stat-sub">Durchschnitt seit Beginn</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-top">
+          <div>
+            <div class="stat-value">${level}</div>
+            <div class="stat-label">🤪 Bierwagen-Level</div>
+          </div>
+          <div class="stat-icon">🏆</div>
+        </div>
+        <div class="stat-sub">Je 5 L ein Level</div>
+      </div>
+    `;
+
+    latestStats = { total, today, lph, level, updatedAt: new Date() };
+
+    if (!document.getElementById("overviewView").classList.contains("hidden")) {
+      updateOverviewKPIs();
+    }
+  }
+
+  function updateOverviewKPIs(){
+    if (!latestStats) return;
+
+    document.getElementById("ov-total").textContent = `${latestStats.total.toFixed(1)} L`;
+    document.getElementById("ov-today").textContent = `${latestStats.today.toFixed(1)} L`;
+    document.getElementById("ov-lph").textContent   = `${latestStats.lph.toFixed(2)} L/h`;
+    document.getElementById("ov-level").textContent = `${latestStats.level}`;
+
+    document.getElementById("ov-partycode").textContent = `Party: ${ROOM_CODE}`;
+    document.getElementById("ov-updated").textContent = `Update: ${latestStats.updatedAt.toLocaleTimeString()}`;
+  }
+
+  /* ---------- RACE ---------- */
   let raceData = [];
   let finishDistance = 10;
   let selectedPlayer = null;
@@ -492,151 +624,7 @@
     document.getElementById('raceUI').classList.add('hidden');
   }
 
-
-  async function cloudAddDrink(amount) {
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/add-drink`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "apikey": SUPABASE_ANON_KEY
-    },
-    body: JSON.stringify({ code: ROOM_CODE, amount }),
-  });
-
-  const text = await res.text();
-  if (!res.ok) throw new Error(text);
-  return JSON.parse(text);
-}
-
-
-  async function cloudAddDrink() {
-    const token = await getAccessTokenOrThrow();
-
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/add-drink`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": SUPABASE_ANON_KEY,
-        "Authorization": `Bearer ${token}`,
-      },
-      body: JSON.stringify({ code: ROOM_CODE, amount: 0.5 }),
-    });
-
-    const text = await res.text();
-    if (!res.ok) throw new Error(text);
-    return JSON.parse(text);
-  }
-
-  /* ---------------- STATS ---------------- */
-  let latestStats = null;
-
-  async function loadStats() {
-    try {
-      const data = await cloudGetStats();
-      renderStatsFromData(data);
-    } catch (e) {
-      console.error("loadStats error:", e);
-      document.getElementById('statsContent').innerHTML = `
-        <div class="stat-card">
-          <div class="stat-top">
-            <div>
-              <div class="stat-value">—</div>
-              <div class="stat-label">Fehler beim Laden</div>
-            </div>
-            <div class="stat-icon">⚠️</div>
-          </div>
-          <div class="stat-sub">${(e?.message || e)}</div>
-        </div>
-      `;
-    }
-  }
-
-  async function addDrink() {
-    try {
-      const data = await cloudAddDrink();
-      renderStatsFromData(data);
-    } catch (e) {
-      console.error("addDrink error:", e);
-      alert("Sync-Fehler: " + (e?.message || e));
-    }
-  }
-
-  function renderStatsFromData(data) {
-    const createdMs = new Date(data.created).getTime();
-    const hours = Math.max(0.001, (Date.now() - createdMs) / 1000 / 3600);
-
-    const total = Number(data.total);
-    const today = Number(data.today);
-
-    const lph = total / hours;
-    const level = Math.floor(total / 5);
-
-    document.getElementById('statsContent').innerHTML = `
-      <div class="stat-card">
-        <div class="stat-top">
-          <div>
-            <div class="stat-value">${total.toFixed(1)} L</div>
-            <div class="stat-label">🍺 Gesamt getrunken</div>
-          </div>
-          <div class="stat-icon">🍻</div>
-        </div>
-        <div class="stat-sub">Seit ${Math.round(hours)} Std · Level ${level}</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-top">
-          <div>
-            <div class="stat-value">${today.toFixed(1)} L</div>
-            <div class="stat-label">📅 Heute</div>
-          </div>
-          <div class="stat-icon">📅</div>
-        </div>
-        <div class="stat-sub">Tageswert — frisch gezählt</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-top">
-          <div>
-            <div class="stat-value">${lph.toFixed(2)} L/h</div>
-            <div class="stat-label">⏱️ Liter pro Stunde</div>
-          </div>
-          <div class="stat-icon">⚡</div>
-        </div>
-        <div class="stat-sub">Durchschnitt seit Beginn</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-top">
-          <div>
-            <div class="stat-value">${level}</div>
-            <div class="stat-label">🤪 Bierwagen-Level</div>
-          </div>
-          <div class="stat-icon">🏆</div>
-        </div>
-        <div class="stat-sub">Je 5 L ein Level</div>
-      </div>
-    `;
-
-    latestStats = { total, today, lph, level, updatedAt: new Date() };
-
-    if (!document.getElementById("overviewView").classList.contains("hidden")) {
-      updateOverviewKPIs();
-    }
-  }
-
-  function updateOverviewKPIs(){
-    if (!latestStats) return;
-
-    document.getElementById("ov-total").textContent = `${latestStats.total.toFixed(1)} L`;
-    document.getElementById("ov-today").textContent = `${latestStats.today.toFixed(1)} L`;
-    document.getElementById("ov-lph").textContent   = `${latestStats.lph.toFixed(2)} L/h`;
-    document.getElementById("ov-level").textContent = `${latestStats.level}`;
-
-    document.getElementById("ov-partycode").textContent = `Party: ${ROOM_CODE}`;
-    document.getElementById("ov-updated").textContent = `Update: ${latestStats.updatedAt.toLocaleTimeString()}`;
-  }
-
-  /* ---------------- GAME CONTAINER MANAGEMENT (Overview) ---------------- */
+  /* ---------- GAME CONTAINER MANAGEMENT (Overview) ---------- */
   const gameRootEl = document.getElementById("race");
   const overviewHost = document.getElementById("overviewGameHost");
   const originalGameParent = gameRootEl?.parentElement;
@@ -679,44 +667,36 @@
     }
   });
 
-  const APP_PASSWORD = "1234"; // <- dein Passwort
+  /* ---------- Boot ---------- */
+  document.addEventListener("DOMContentLoaded", () => {
+    showLogin();
+    setUserPill("Gesperrt");
 
-function tryLoginWithPassword() {
-  const pw = document.getElementById("loginPassword").value;
-  const err = document.getElementById("loginError");
+    // Auto-unlock, wenn schon mal korrekt eingegeben
+    if (isUnlocked()) {
+      showApp();
+      setUserPill("Zugang OK");
+      showSection("race");
+      loadStats();
+      updateOverviewKPIs();
+    }
 
-  if (pw === APP_PASSWORD) {
-    localStorage.setItem("bierwagen_unlocked", "1");
-    err.textContent = "";
-    showApp();
-    showSection("race");
-    loadStats();
-    updateOverviewKPIs();
-  } else {
-    err.textContent = "Falsches Passwort.";
-  }
-}
+    document.getElementById("btnLogin")?.addEventListener("click", tryLoginWithPassword);
+    document.getElementById("loginPassword")?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") tryLoginWithPassword();
+    });
 
-document.addEventListener("DOMContentLoaded", () => {
-  // Login sichtbar lassen
-  showLogin();
-
-  // Wenn schon mal entsperrt: direkt rein
-  if (localStorage.getItem("bierwagen_unlocked") === "1") {
-    showApp();
-    showSection("race");
-    loadStats();
-    updateOverviewKPIs();
-  }
-
-  document.getElementById("btnLogin").addEventListener("click", tryLoginWithPassword);
-
-  document.getElementById("loginPassword").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") tryLoginWithPassword();
+    document.getElementById("btnLogout")?.addEventListener("click", () => {
+      lockApp();
+      document.getElementById("loginPassword").value = "";
+      document.getElementById("loginError").textContent = "";
+      showLogin();
+      setUserPill("Gesperrt");
+    });
   });
-});
-
 </script>
+
+
 
 </body>
 </html>
