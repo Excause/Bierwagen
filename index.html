@@ -667,6 +667,11 @@ function renderStatsFromData(data) {
     level: level,
     updatedAt: new Date()
   };
+
+  // Aktualisiere die Overview-KPIs, falls Overview aktiv ist
+  if (!document.getElementById("overviewView").classList.contains("hidden")) {
+    updateOverviewKPIs();
+  }
 }
 
 function updateOverviewKPIs(){
@@ -720,6 +725,44 @@ async function cloudAddDrink(amount) {
   return await res.json();
 }
 
+// --- GAME CONTAINER MANAGEMENT (Overview) ---
+const gameRootEl = document.getElementById("race");
+const overviewHost = document.getElementById("overviewGameHost");
+const originalGameParent = gameRootEl?.parentElement;
+const originalGameNextSibling = gameRootEl?.nextSibling;
+
+function isGameActive(){
+  return !!window.GAME_ACTIVE;
+}
+
+function mountGameIntoOverviewIfActive(){
+  if (!gameRootEl || !overviewHost) return;
+
+  if (isGameActive()){
+    overviewHost.innerHTML = "";
+    overviewHost.appendChild(gameRootEl);
+  } else {
+    overviewHost.innerHTML = `
+      <div class="placeholder">
+        <div class="placeholder-title">Kein Minispiel aktiv</div>
+        <div class="placeholder-sub">Starte ein Spiel, dann erscheint es hier groß.</div>
+      </div>
+    `;
+  }
+}
+
+function restoreGameToNormalPlace(){
+  if (!gameRootEl || !originalGameParent) return;
+
+  if (gameRootEl.parentElement !== originalGameParent){
+    if (originalGameNextSibling) {
+      originalGameParent.insertBefore(gameRootEl, originalGameNextSibling);
+    } else {
+      originalGameParent.appendChild(gameRootEl);
+    }
+  }
+}
+
 document.getElementById("btn-fullscreen")?.addEventListener("click", async () => {
   try {
     if (!document.fullscreenElement) {
@@ -735,5 +778,3 @@ document.getElementById("btn-fullscreen")?.addEventListener("click", async () =>
 
 </body>
 </html>
-
-
