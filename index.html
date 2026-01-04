@@ -190,41 +190,41 @@
       lane.appendChild(car);
       document.getElementById('track').appendChild(lane);
 
-      const btnBeer = document.createElement('button');
-      btnBeer.innerText = `Spieler ${i + 1}: 🍺 Bier`;
-      btnBeer.onclick = () => moveCar(i, 1);
+    const btnBeer = document.createElement('button');
+    btnBeer.innerText = `Spieler ${i + 1}: 🍺 Bier`;
+    btnBeer.onclick = () => moveCar(i, 1);
 
-      const btnRadler = document.createElement('button');
-      btnRadler.innerText = `Spieler ${i + 1}: 🍺 Radler`;
-      btnRadler.onclick = () => moveCar(i, 0);
+    const btnRadler = document.createElement('button');
+    btnRadler.innerText = `Spieler ${i + 1}: 🍺 Radler`;
+    btnRadler.onclick = () => moveCar(i, 0.5);
+
 
       document.getElementById('controls').appendChild(btnBeer);
       document.getElementById('controls').appendChild(btnRadler);
     }
   }
 
- function moveCar(index, points) {
-  // Statistik: immer 0.5 Liter pro Getränk
+function moveCar(index, points) {
+  // Statistik: jedes Getränk = 0.5 L
   addDrink(0.5);
 
-  // Spielpunkte (Bier = 1, Radler = 0.5)
+  // Spielpunkte: Bier=1, Radler=0.5
   raceData[index].points += points;
 
-  const track = document.getElementById('track');
-  const trackWidth = track.offsetWidth - 40; // Auto-Breite berücksichtigen
-
-  const progress = Math.min(
-    raceData[index].points / finishDistance,
-    1
-  );
-
   const car = document.getElementById('car-' + index);
-  car.style.left = (trackWidth * progress) + 'px';
+  const lane = car.parentElement; // <-- die Lane ist die Referenz!
+  const maxLeft = lane.clientWidth - car.clientWidth;
+
+  const progress = Math.min(raceData[index].points / finishDistance, 1);
+  const leftPx = Math.max(0, Math.round(maxLeft * progress));
+
+  car.style.left = leftPx + 'px';
 
   if (raceData[index].points >= finishDistance) {
     alert(`🏆 Spieler ${index + 1} gewinnt das Rennen!`);
   }
 }
+
 
 
   /* ---------------- STATS ---------------- */
