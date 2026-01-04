@@ -199,17 +199,13 @@
 <!-- LOGIN VIEW -->
 <div id="login" class="hidden">
   <div class="login-box">
-    <h2>🔐 Login</h2>
-    <div class="login-hint">Bitte einloggen, um Stats & Sync zu nutzen.</div>
-
-    <label>E-Mail</label><br>
-    <input id="loginEmail" type="email" placeholder="mail@example.com" autocomplete="email" /><br>
+    <h2>🔐 Zugang</h2>
+    <div class="login-hint">Passwort eingeben, um fortzufahren.</div>
 
     <label>Passwort</label><br>
     <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" /><br>
 
-    <button id="btnLogin">Einloggen</button>
-    <button id="btnSignup" class="ghost">Account erstellen</button>
+    <button id="btnLogin">Los geht’s</button>
 
     <div id="loginError" class="login-error"></div>
   </div>
@@ -331,6 +327,8 @@
   const SUPABASE_URL = "https://vrthtvecnbhzgkkguaat.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_t3ZMUJeiE2ZKxDAQd1T87w_U1KE0nlg";
 
+  const APP_PASSWORD = "1234"; // <-- dein Passwort
+
 
   // Party-Code
   let ROOM_CODE = localStorage.getItem("bierwagen_room") || "HB-2026";
@@ -345,27 +343,32 @@
     document.getElementById("app").classList.remove("hidden");
   }
 
-  function setUserPill(user) {
+  function setUserPill(text) {
     const pill = document.getElementById("userPill");
-    if (!user) {
-      pill.textContent = "Nicht eingeloggt";
-      return;
-    }
-    pill.textContent = user.email || ("User: " + user.id.slice(0, 8));
+    pill.textContent = text || "Offline";
   }
 
-  async function ensureSessionOrLogin() {
-    const { data } = await window.sb.auth.getSession();
-    const session = data?.session;
+  function isUnlocked() {
+    return localStorage.getItem("bierwagen_unlocked") === "1";
+  }
 
-    if (!session) {
+  function unlockApp() {
+    localStorage.setItem("bierwagen_unlocked", "1");
+  }
+
+  function lockApp() {
+    localStorage.removeItem("bierwagen_unlocked");
+  }
+
+  function ensureUnlockedOrShowLogin() {
+    if (!isUnlocked()) {
       showLogin();
-      setUserPill(null);
+      setUserPill("Gesperrt");
       return false;
     }
 
     showApp();
-    setUserPill(session.user);
+    setUserPill("Zugang OK");
     return true;
   }
 
@@ -385,16 +388,10 @@
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
-    // Supabase-Client sicher initialisieren
-    window.sb = window.sb || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    showLogin();
+    setUserPill("Gesperrt");
 
-    console.log("Supabase Client initialized:", window.sb);
-    if (!window.sb) {
-      throw new Error("Supabase Client konnte nicht initialisiert werden.");
-    }
-
-    // Session sicherstellen
-    const ok = await ensureSessionOrLogin();
+    const ok = ensureUnlockedOrShowLogin();
     if (!ok) return;
 
     showSection("race");
@@ -495,32 +492,24 @@
     document.getElementById('raceUI').classList.add('hidden');
   }
 
-  /* ---------------- CLOUD CALLS (JWT) ---------------- */
-  async function getAccessTokenOrThrow() {
-    const { data } = await window.sb.auth.getSession();
-    const token = data?.session?.access_token;
-    if (!token) throw new Error("Nicht eingeloggt (kein Token).");
-    return token;
-  }
-
-  async function cloudGetStats() {
-    const token = await getAccessTokenOrThrow();
-
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/get-stats`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": SUPABASE_ANON_KEY,
-        "Authorization": `Bearer ${token}`,
-      },
-      body: JSON.stringify({ code: ROOM_CODE }),
-    });
-
-    if (!res.ok) throw new Error(await res.text());
-    return await res.json();
-  }
 
   async function cloudAddDrink(amount) {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/add-drink`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_ANON_KEY
+    },
+    body: JSON.stringify({ code: ROOM_CODE, amount }),
+  });
+
+  const text = await res.text();
+  if (!res.ok) throw new Error(text);
+  return JSON.parse(text);
+}
+
+
+  async function cloudAddDrink() {
     const token = await getAccessTokenOrThrow();
 
     const res = await fetch(`${SUPABASE_URL}/functions/v1/add-drink`, {
@@ -530,7 +519,7 @@
         "apikey": SUPABASE_ANON_KEY,
         "Authorization": `Bearer ${token}`,
       },
-      body: JSON.stringify({ code: ROOM_CODE, amount }),
+      body: JSON.stringify({ code: ROOM_CODE, amount: 0.5 }),
     });
 
     const text = await res.text();
@@ -562,9 +551,9 @@
     }
   }
 
-  async function addDrink(amount) {
+  async function addDrink() {
     try {
-      const data = await cloudAddDrink(amount);
+      const data = await cloudAddDrink();
       renderStatsFromData(data);
     } catch (e) {
       console.error("addDrink error:", e);
@@ -688,35 +677,6 @@
     } catch (e) {
       console.log("Fullscreen failed:", e);
     }
-  });
-
-  /* ---------------- PASSWORD PROTECT ---------------- */
-  document.addEventListener("DOMContentLoaded", () => {
-    const PASSWORD = "1234";
-
-    const passwordPrompt = () => {
-      const userInput = prompt("Bitte Passwort eingeben:");
-      if (userInput !== PASSWORD) {
-        alert("Falsches Passwort. Zugriff verweigert.");
-        passwordPrompt();
-      } else {
-        showOverview();
-      }
-    };
-
-    const showOverview = () => {
-      // Blende den Login-Bereich aus
-      document.getElementById("login-screen").style.display = "none";
-
-      // Blende den Overview-Bereich ein
-      document.getElementById("overview").style.display = "block";
-    };
-
-    // Verstecke den Overview-Bereich initial
-    document.getElementById("overview").style.display = "none";
-
-    // Zeige das Passwort-Prompt
-    passwordPrompt();
   });
 </script>
 
