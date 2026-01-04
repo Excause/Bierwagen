@@ -5,34 +5,49 @@
   <title>Bierwagen Racing</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    :root {
-      --green: #004225; /* British Racing Green */
-      --light: #f4f4f4;
-      --accent: #cfae70; /* gold/beer accent */
+    .stat-card {
+      position: relative;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+      border-radius: 12px;
+      padding: 20px;
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+      border: 1px solid rgba(255,255,255,0.04);
+      transition: transform 160ms ease, box-shadow 160ms ease;
+      overflow: hidden;
     }
 
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: var(--green);
-      color: white;
+    .stat-card:hover { transform: translateY(-6px); box-shadow: 0 14px 36px rgba(0,0,0,0.55); }
+
+    /* Icon placed top-right inside the card */
+    .stat-icon {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 1.05rem;
+      opacity: 0.95;
+      line-height: 1;
     }
 
-    h1, h2 {
-      margin-top: 0;
+    .stat-value {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--light);
+      letter-spacing: -0.4px;
     }
 
-    button, input {
-      padding: 10px;
-      margin: 5px 0;
-      border-radius: 6px;
-      border: none;
-      font-size: 1rem;
+    .stat-unit {
+      font-size: 1.05rem;
+      font-weight: 700;
+      opacity: 0.9;
     }
-
-    button {
-      background: var(--accent);
-      color: #222;
       cursor: pointer;
       font-weight: bold;
     }
@@ -401,45 +416,37 @@ function resetRace() {
 
     document.getElementById('statsContent').innerHTML = `
       <div class="stat-card">
-        <div class="stat-top">
-          <div>
-            <div class="stat-value">${data.total.toFixed(1)} L</div>
-            <div class="stat-label">🍺 Gesamt getrunken</div>
-          </div>
-          <div class="stat-icon">🍻</div>
+        <div class="stat-icon">🍻</div>
+        <div>
+          <div class="stat-value"><span>${data.total.toFixed(1)}</span><span class="stat-unit">L</span></div>
+          <div class="stat-label">🍺 Gesamt getrunken</div>
         </div>
         <div class="stat-sub">Seit ${Math.round(hours)} Std · Level ${level}</div>
       </div>
 
       <div class="stat-card">
-        <div class="stat-top">
-          <div>
-            <div class="stat-value">${data.today.toFixed(1)} L</div>
-            <div class="stat-label">📅 Heute</div>
-          </div>
-          <div class="stat-icon">📅</div>
+        <div class="stat-icon">📅</div>
+        <div>
+          <div class="stat-value"><span>${data.today.toFixed(1)}</span><span class="stat-unit">L</span></div>
+          <div class="stat-label">📅 Heute</div>
         </div>
         <div class="stat-sub">Tageswert — frisch gezählt</div>
       </div>
 
       <div class="stat-card">
-        <div class="stat-top">
-          <div>
-            <div class="stat-value">${lph.toFixed(2)} L/h</div>
-            <div class="stat-label">⏱️ Liter pro Stunde</div>
-          </div>
-          <div class="stat-icon">⚡</div>
+        <div class="stat-icon">⚡</div>
+        <div>
+          <div class="stat-value"><span>${lph.toFixed(2)}</span><span class="stat-unit">L/h</span></div>
+          <div class="stat-label">⏱️ Liter pro Stunde</div>
         </div>
         <div class="stat-sub">Durchschnitt seit Beginn</div>
       </div>
 
       <div class="stat-card">
-        <div class="stat-top">
-          <div>
-            <div class="stat-value">${level}</div>
-            <div class="stat-label">🤪 Bierwagen-Level</div>
-          </div>
-          <div class="stat-icon">🏆</div>
+        <div class="stat-icon">🏆</div>
+        <div>
+          <div class="stat-value"><span>${level}</span></div>
+          <div class="stat-label">🤪 Bierwagen-Level</div>
         </div>
         <div class="stat-sub">Je 5 L ein Level</div>
       </div>
