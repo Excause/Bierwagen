@@ -689,6 +689,27 @@
       console.log("Fullscreen failed:", e);
     }
   });
+
+  /* ---------------- PASSWORD PROTECT ---------------- */
+  document.addEventListener("DOMContentLoaded", () => {
+    const PASSWORD = "1234";
+
+    const passwordPrompt = () => {
+      const userInput = prompt("Bitte Passwort eingeben:");
+      if (userInput !== PASSWORD) {
+        alert("Falsches Passwort. Zugriff verweigert.");
+        passwordPrompt();
+      } else {
+        document.getElementById("app").classList.remove("hidden");
+      }
+    };
+
+    // Verstecke die App initial
+    document.getElementById("app").classList.add("hidden");
+
+    // Zeige das Passwort-Prompt
+    passwordPrompt();
+  });
 </script>
 
 </body>
