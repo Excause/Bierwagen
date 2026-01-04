@@ -255,6 +255,9 @@
         </div>
 
         <button class="ghost" onclick="resetRace()">↩️ Neues Rennen</button>
+        <button class="ghost" onclick="undoLastMove()">↩️ Rückgängig</button>
+
+
       </div>
 
       <div id="track" class="track"></div>
@@ -269,6 +272,7 @@
       <div class="stats-actions">
         <button onclick="addDrink(0.5)">🍺 Bier hinzufügen (0,5 L)</button>
         <button onclick="addDrink(0.5)">🍺 Radler hinzufügen (0,5 L)</button>
+         <button class="ghost" onclick="resetStats()">🧹 Statistik zurücksetzen</button>
       </div>
     </div>
 
@@ -456,6 +460,33 @@ function tryLoginWithPassword() {
   }
 }
 
+async function cloudResetStats() {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/reset-stats`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_ANON_KEY
+    },
+    body: JSON.stringify({ code: ROOM_CODE }),
+  });
+
+  if (!res.ok) throw new Error(await res.text());
+  return await res.json();
+}
+
+async function resetStats() {
+  const ok = confirm("Statistik wirklich zurücksetzen? (Gesamt & Heute werden auf 0 gesetzt)");
+  if (!ok) return;
+
+  try {
+    const data = await cloudResetStats();
+    renderStatsFromData(data);
+  } catch (e) {
+    console.error("resetStats error:", e);
+    alert("Reset-Fehler: " + (e?.message || e));
+  }
+}
+
   /* ---------- STATS ---------- */
   let latestStats = null;
 
@@ -569,6 +600,7 @@ function tryLoginWithPassword() {
   let raceData = [];
   let finishDistance = 10;
   let selectedPlayer = null;
+  let moveHistory = []; // Stack für Undo
 
   function startRace() {
     window.GAME_ACTIVE = true;
@@ -577,6 +609,7 @@ function tryLoginWithPassword() {
     finishDistance = Number(document.getElementById('distance').value);
 
     raceData = [];
+    moveHistory = [];
     document.getElementById('track').innerHTML = '';
     document.getElementById('playerPicker').innerHTML = '';
 
@@ -618,14 +651,69 @@ function tryLoginWithPassword() {
     }
   }
 
-  async function giveDrink(points) {
-    if (selectedPlayer === null) {
-      alert('Bitte zuerst einen Spieler wählen.');
-      return;
-    }
-    await addDrink(0.5);      // Statistik: immer 0,5L
-    moveCar(selectedPlayer, points);
+  function undoLastMove() {
+  if (!moveHistory.length) {
+    alert("Nichts zum Rückgängig machen.");
+    return;
   }
+  const last = moveHistory.pop();
+
+  // Punkte zurückdrehen
+  raceData[last.player].points = Math.max(0, raceData[last.player].points - last.points);
+  redrawCarPosition(last.player);
+
+  // Optional: Statistik ebenfalls zurückdrehen (nur wenn Backend negative Werte erlaubt)
+  // Wenn dein Backend das NICHT kann, kommentiere den Block aus.
+  cloudAddDrink(-last.liters)
+    .then((data) => renderStatsFromData(data))
+    .catch((e) => {
+      console.warn("Undo konnte Statistik nicht syncen (Backend erlaubt evtl. keine negativen Werte):", e);
+      // Dann bleibt Undo nur fürs Rennen – Statistik bleibt wie sie ist.
+    });
+}
+
+function redrawCarPosition(index) {
+  const car = document.getElementById('car-' + index);
+  if (!car) return;
+  const lane = car.parentElement;
+  const maxLeft = lane.clientWidth - car.clientWidth;
+
+  const progress = Math.min(raceData[index].points / finishDistance, 1);
+  const leftPx = Math.max(0, Math.round(maxLeft * progress));
+  car.style.left = leftPx + 'px';
+}
+
+ async function giveDrink(points) {
+  if (selectedPlayer === null) {
+    alert("Bitte zuerst einen Spieler wählen.");
+    return;
+  }
+
+  if (drinkBusy) return;
+  drinkBusy = true;
+
+  try {
+    // 1) erst Statistik syncen (damit Spiel nicht "weiterläuft", wenn Backend down ist)
+    await addDrink(0.5); // Statistik: immer 0,5L
+
+    // 2) Undo-History speichern (für Rückgängig)
+    moveHistory.push({
+      player: selectedPlayer,
+      points,
+      liters: 0.5,
+      ts: Date.now()
+    });
+
+    // 3) erst danach Auto bewegen
+    moveCar(selectedPlayer, points);
+
+  } catch (e) {
+    // addDrink macht schon alert; hier nur optionales Logging
+    console.error("giveDrink failed:", e);
+  } finally {
+    drinkBusy = false;
+  }
+}
 
   function moveCar(index, points) {
     raceData[index].points += points;
