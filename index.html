@@ -334,15 +334,28 @@
   let ROOM_CODE = localStorage.getItem("bierwagen_room") || "HB-2026";
 
   /* ---------- Views ---------- */
-  function showLogin() {
-    document.getElementById("login").classList.remove("hidden");
-    document.getElementById("app").classList.add("hidden");
-  }
+ function showLogin() {
+  const login = document.getElementById("login");
+  const app = document.getElementById("app");
 
-  function showApp() {
-    document.getElementById("login").classList.add("hidden");
-    document.getElementById("app").classList.remove("hidden");
-  }
+  login.classList.remove("hidden");
+  login.style.display = "flex";
+
+  app.classList.add("hidden");
+  app.style.display = "none";
+}
+
+function showApp() {
+  const login = document.getElementById("login");
+  const app = document.getElementById("app");
+
+  login.classList.add("hidden");
+  login.style.display = "none";
+
+  app.classList.remove("hidden");
+  app.style.display = "block";
+}
+
 
   function setUserPill(text) {
     const pill = document.getElementById("userPill");
@@ -360,22 +373,27 @@
   }
 
   /* ---------- Password Login ---------- */
-  function tryLoginWithPassword() {
-    const pw = document.getElementById("loginPassword").value;
-    const err = document.getElementById("loginError");
+function tryLoginWithPassword() {
+  const pw = document.getElementById("loginPassword").value.trim();
+  const err = document.getElementById("loginError");
 
-    if (pw === APP_PASSWORD) {
-      unlockApp();
-      err.textContent = "";
-      showApp();
-      setUserPill("Zugang OK");
-      showSection("race");
-      loadStats();
-      updateOverviewKPIs();
-    } else {
-      err.textContent = "Falsches Passwort.";
-    }
+  if (pw === APP_PASSWORD) {
+    unlockApp();
+    err.textContent = "";
+
+    // UI sofort umschalten
+    showApp();
+    setUserPill("Zugang OK");
+    showSection("race");
+
+    // Stats im Hintergrund laden (ohne Popups)
+    loadStats().catch(() => {});
+    updateOverviewKPIs();
+  } else {
+    err.textContent = "Falsches Passwort.";
   }
+}
+
 
   /* ---------- NAV ---------- */
   function showSection(id) {
@@ -668,32 +686,37 @@
   });
 
   /* ---------- Boot ---------- */
-  document.addEventListener("DOMContentLoaded", () => {
+ document.addEventListener("DOMContentLoaded", () => {
+  // Startzustand korrekt setzen
+  if (isUnlocked()) {
+    showApp();
+    setUserPill("Zugang OK");
+    showSection("race");
+
+    // Stats laden ohne UI zu blocken
+    loadStats().catch(() => {});
+    updateOverviewKPIs();
+  } else {
     showLogin();
     setUserPill("Gesperrt");
+  }
 
-    // Auto-unlock, wenn schon mal korrekt eingegeben
-    if (isUnlocked()) {
-      showApp();
-      setUserPill("Zugang OK");
-      showSection("race");
-      loadStats();
-      updateOverviewKPIs();
-    }
-
-    document.getElementById("btnLogin")?.addEventListener("click", tryLoginWithPassword);
-    document.getElementById("loginPassword")?.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") tryLoginWithPassword();
-    });
-
-    document.getElementById("btnLogout")?.addEventListener("click", () => {
-      lockApp();
-      document.getElementById("loginPassword").value = "";
-      document.getElementById("loginError").textContent = "";
-      showLogin();
-      setUserPill("Gesperrt");
-    });
+  // Login
+  document.getElementById("btnLogin")?.addEventListener("click", tryLoginWithPassword);
+  document.getElementById("loginPassword")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") tryLoginWithPassword();
   });
+
+  // Logout
+  document.getElementById("btnLogout")?.addEventListener("click", () => {
+    lockApp();
+    document.getElementById("loginPassword").value = "";
+    document.getElementById("loginError").textContent = "";
+    showLogin();
+    setUserPill("Gesperrt");
+  });
+});
+
 </script>
 
 
