@@ -331,7 +331,8 @@
   const SUPABASE_URL = "https://vrthtvecnbhzgkkguaat.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_t3ZMUJeiE2ZKxDAQd1T87w_U1KE0nlg";
 
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  window.supabaseClient = window.supabaseClient || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supabase = window.supabaseClient;
 
   // Party-Code
   let ROOM_CODE = localStorage.getItem("bierwagen_room") || "HB-2026";
@@ -370,64 +371,6 @@
     return true;
   }
 
-  // Login button
-  document.getElementById("btnLogin").addEventListener("click", async () => {
-    const email = document.getElementById("loginEmail").value.trim();
-    const password = document.getElementById("loginPassword").value;
-    const errEl = document.getElementById("loginError");
-    errEl.textContent = "";
-
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-
-      showApp();
-      setUserPill(data.session.user);
-
-      showSection("race");
-      await loadStats();
-      updateOverviewKPIs();
-    } catch (e) {
-      errEl.textContent = e?.message || String(e);
-    }
-  });
-
-  // Signup button (optional – für Party evtl. deaktivieren)
-  document.getElementById("btnSignup").addEventListener("click", async () => {
-    const email = document.getElementById("loginEmail").value.trim();
-    const password = document.getElementById("loginPassword").value;
-    const errEl = document.getElementById("loginError");
-    errEl.textContent = "";
-
-    try {
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) throw error;
-
-      // Je nach Supabase Settings: Email-Confirm nötig
-      errEl.textContent = "Account erstellt. Falls Email-Confirm aktiv ist: bitte Mail prüfen.";
-    } catch (e) {
-      errEl.textContent = e?.message || String(e);
-    }
-  });
-
-  // Logout
-  document.getElementById("btnLogout").addEventListener("click", async () => {
-    await supabase.auth.signOut();
-    showLogin();
-    setUserPill(null);
-  });
-
-  // Auth state change (Token refresh etc.)
-  supabase.auth.onAuthStateChange((_event, session) => {
-    if (!session) {
-      showLogin();
-      setUserPill(null);
-    } else {
-      showApp();
-      setUserPill(session.user);
-    }
-  });
-
   /* ---------------- NAV ---------------- */
   function showSection(id) {
     if (id !== "overviewView") restoreGameToNormalPlace();
@@ -444,6 +387,49 @@
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
+    document.getElementById("btnLogin").addEventListener("click", async () => {
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      const errEl = document.getElementById("loginError");
+      errEl.textContent = "";
+
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+
+        showApp();
+        setUserPill(data.session.user);
+
+        showSection("race");
+        await loadStats();
+        updateOverviewKPIs();
+      } catch (e) {
+        errEl.textContent = e?.message || String(e);
+      }
+    });
+
+    document.getElementById("btnSignup").addEventListener("click", async () => {
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      const errEl = document.getElementById("loginError");
+      errEl.textContent = "";
+
+      try {
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) throw error;
+
+        errEl.textContent = "Account erstellt. Falls Email-Confirm aktiv ist: bitte Mail prüfen.";
+      } catch (e) {
+        errEl.textContent = e?.message || String(e);
+      }
+    });
+
+    document.getElementById("btnLogout").addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      showLogin();
+      setUserPill(null);
+    });
+
     const ok = await ensureSessionOrLogin();
     if (!ok) return;
 
@@ -570,7 +556,7 @@
     return await res.json();
   }
 
-  async function cloudAddDrink(amount) {
+  async function cloudAddDrink() {
     const token = await getAccessTokenOrThrow();
 
     const res = await fetch(`${SUPABASE_URL}/functions/v1/add-drink`, {
