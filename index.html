@@ -331,8 +331,8 @@
   const SUPABASE_URL = "https://vrthtvecnbhzgkkguaat.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_t3ZMUJeiE2ZKxDAQd1T87w_U1KE0nlg";
 
-  window.supabaseClient = window.supabaseClient || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const supabase = window.supabaseClient;
+  window.sb = window.sb || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supabase = window.sb;
 
   // Party-Code
   let ROOM_CODE = localStorage.getItem("bierwagen_room") || "HB-2026";
@@ -357,7 +357,7 @@
   }
 
   async function ensureSessionOrLogin() {
-    const { data } = await supabase.auth.getSession();
+    const { data } = await window.sb.auth.getSession();
     const session = data?.session;
 
     if (!session) {
@@ -394,7 +394,7 @@
       errEl.textContent = "";
 
       try {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await window.sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
 
         showApp();
@@ -415,7 +415,7 @@
       errEl.textContent = "";
 
       try {
-        const { data, error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await window.sb.auth.signUp({ email, password });
         if (error) throw error;
 
         errEl.textContent = "Account erstellt. Falls Email-Confirm aktiv ist: bitte Mail prüfen.";
@@ -425,7 +425,7 @@
     });
 
     document.getElementById("btnLogout").addEventListener("click", async () => {
-      await supabase.auth.signOut();
+      await window.sb.auth.signOut();
       showLogin();
       setUserPill(null);
     });
@@ -533,7 +533,7 @@
 
   /* ---------------- CLOUD CALLS (JWT) ---------------- */
   async function getAccessTokenOrThrow() {
-    const { data } = await supabase.auth.getSession();
+    const { data } = await window.sb.auth.getSession();
     const token = data?.session?.access_token;
     if (!token) throw new Error("Nicht eingeloggt (kein Token).");
     return token;
@@ -556,7 +556,7 @@
     return await res.json();
   }
 
-  async function cloudAddDrink() {
+  async function cloudAddDrink(amount) {
     const token = await getAccessTokenOrThrow();
 
     const res = await fetch(`${SUPABASE_URL}/functions/v1/add-drink`, {
