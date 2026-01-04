@@ -700,12 +700,20 @@
         alert("Falsches Passwort. Zugriff verweigert.");
         passwordPrompt();
       } else {
-        document.getElementById("app").classList.remove("hidden");
+        showOverview();
       }
     };
 
-    // Verstecke die App initial
-    document.getElementById("app").classList.add("hidden");
+    const showOverview = () => {
+      // Blende den Login-Bereich aus
+      document.getElementById("login").classList.add("hidden");
+
+      // Blende den Overview-Bereich ein
+      document.getElementById("overviewView").classList.remove("hidden");
+    };
+
+    // Verstecke den Overview-Bereich initial
+    document.getElementById("overviewView").classList.add("hidden");
 
     // Zeige das Passwort-Prompt
     passwordPrompt();
