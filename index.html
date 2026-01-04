@@ -426,19 +426,35 @@ function tryLoginWithPassword() {
   }
 
   async function cloudAddDrink(amount) {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/add-drink`, {
+  const url = `${SUPABASE_URL}/functions/v1/add-drink`;
+  try {
+    const res = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "apikey": SUPABASE_ANON_KEY
+        "apikey": SUPABASE_ANON_KEY,
       },
       body: JSON.stringify({ code: ROOM_CODE, amount }),
     });
 
     const text = await res.text();
-    if (!res.ok) throw new Error(text);
-    return JSON.parse(text);
+    if (!res.ok) {
+      // gibt dir 401/403/500 samt body
+      throw new Error(`HTTP ${res.status}: ${text}`);
+    }
+
+    // Debug: falls mal kein JSON zurückkommt
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error(`Antwort ist kein JSON: ${text.slice(0, 200)}`);
+    }
+  } catch (e) {
+    // DAS ist der wichtige Teil: echte Ursache loggen
+    console.error("cloudAddDrink failed:", e);
+    throw e;
   }
+}
 
   /* ---------- STATS ---------- */
   let latestStats = null;
