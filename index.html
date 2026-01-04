@@ -203,21 +203,29 @@
     }
   }
 
-  function moveCar(index, points) {
-  // ✅ Liter: Bier und Radler sollen gleich gezählt werden (0.5L pro Klick)
+ function moveCar(index, points) {
+  // Statistik: immer 0.5 Liter pro Getränk
   addDrink(0.5);
 
-  // ✅ Punkte im Spiel: bleibt wie übergeben (Bier=1, Radler=0 in deinem Setup)
+  // Spielpunkte (Bier = 1, Radler = 0.5)
   raceData[index].points += points;
 
-  const percent = Math.min(raceData[index].points / finishDistance, 1);
+  const track = document.getElementById('track');
+  const trackWidth = track.offsetWidth - 40; // Auto-Breite berücksichtigen
+
+  const progress = Math.min(
+    raceData[index].points / finishDistance,
+    1
+  );
+
   const car = document.getElementById('car-' + index);
-  car.style.left = `calc(${percent * 100}% - 30px)`;
+  car.style.left = (trackWidth * progress) + 'px';
 
   if (raceData[index].points >= finishDistance) {
     alert(`🏆 Spieler ${index + 1} gewinnt das Rennen!`);
   }
 }
+
 
   /* ---------------- STATS ---------------- */
   const STATS_KEY = 'bierwagen_stats';
