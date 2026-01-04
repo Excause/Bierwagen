@@ -42,7 +42,7 @@
     }
 
     .container {
-      max-width: 900px;
+      max-width: 1200px;           /* vorher 900px */
       margin: auto;
       padding: 20px;
     }
@@ -108,23 +108,37 @@
       margin: 10px 0;
     }
     /* Modern large stat cards */
-    /* Make the stat area a clean grid (remove the heavy outer panel) */
+    #stats h2 {
+      text-align: center;          /* wie im Screenshot */
+      margin-bottom: 18px;
+    }
+
+    /* feste 4 Karten in einer Reihe (Desktop) */
     #statsContent {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr)); /* wichtig: minmax(0,1fr) */
       gap: 18px;
       align-items: stretch;
-      background: transparent; /* override .stats-box darker background */
+      background: transparent;
       padding: 0;
       margin: 8px 0 18px 0;
     }
 
+    /* Tablet */
     @media (max-width: 900px) {
-      #statsContent { grid-template-columns: repeat(2, 1fr); }
+      #statsContent { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
+    /* Handy */
     @media (max-width: 480px) {
       #statsContent { grid-template-columns: 1fr; }
+    }
+
+    /* wrapper soll NICHT als dunkle box erscheinen */
+    .stats-box#statsContent {
+      background: transparent;
+      padding: 0;
+      border-radius: 0;
     }
 
     .stat-card {
@@ -207,6 +221,12 @@
     .action-title { font-weight: bold; }
 
     .action-buttons button { margin-right: 6px; }
+
+    .stats-actions{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
   </style>
 </head>
 <body>
@@ -262,8 +282,10 @@
 
       <div class="stats-box" id="statsContent"></div>
 
-      <button onclick="addDrink(0.5)">🍺 Bier hinzufügen</button>
-      <button onclick="addDrink(0.5)">🍺 Radler hinzufügen</button>
+      <div class="stats-actions">
+        <button onclick="addDrink(0.5)">🍺 Bier hinzufügen</button>
+        <button onclick="addDrink(0.5)">🍺 Radler hinzufügen</button>
+      </div>
     </div>
 
   </div>
