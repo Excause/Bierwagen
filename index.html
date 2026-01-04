@@ -385,53 +385,19 @@
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
-    document.getElementById("btnLogin").addEventListener("click", async () => {
-      const email = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPassword").value;
-      const errEl = document.getElementById("loginError");
-      errEl.textContent = "";
+    // Supabase-Client sicher initialisieren
+    window.sb = window.sb || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      try {
-        const { data, error } = await window.sb.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+    console.log("Supabase Client initialized:", window.sb);
+    if (!window.sb) {
+      throw new Error("Supabase Client konnte nicht initialisiert werden.");
+    }
 
-        showApp();
-        setUserPill(data.session.user);
-
-        showSection("race");
-        await loadStats();
-        updateOverviewKPIs();
-      } catch (e) {
-        errEl.textContent = e?.message || String(e);
-      }
-    });
-
-    document.getElementById("btnSignup").addEventListener("click", async () => {
-      const email = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPassword").value;
-      const errEl = document.getElementById("loginError");
-      errEl.textContent = "";
-
-      try {
-        const { data, error } = await window.sb.auth.signUp({ email, password });
-        if (error) throw error;
-
-        errEl.textContent = "Account erstellt. Falls Email-Confirm aktiv ist: bitte Mail prüfen.";
-      } catch (e) {
-        errEl.textContent = e?.message || String(e);
-      }
-    });
-
-    document.getElementById("btnLogout").addEventListener("click", async () => {
-      await window.sb.auth.signOut();
-      showLogin();
-      setUserPill(null);
-    });
-
+    // Session sicherstellen
     const ok = await ensureSessionOrLogin();
     if (!ok) return;
 
-    showSection('race');
+    showSection("race");
     await loadStats();
     updateOverviewKPIs();
   });
