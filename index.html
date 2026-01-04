@@ -197,7 +197,7 @@
 <body>
 
 <!-- LOGIN VIEW -->
-<div id="login" class="hidden">
+<div id="login" >
   <div class="login-box">
     <h2>🔐 Zugang</h2>
     <div class="login-hint">Passwort eingeben, um fortzufahren.</div>
@@ -678,6 +678,44 @@
       console.log("Fullscreen failed:", e);
     }
   });
+
+  const APP_PASSWORD = "1234"; // <- dein Passwort
+
+function tryLoginWithPassword() {
+  const pw = document.getElementById("loginPassword").value;
+  const err = document.getElementById("loginError");
+
+  if (pw === APP_PASSWORD) {
+    localStorage.setItem("bierwagen_unlocked", "1");
+    err.textContent = "";
+    showApp();
+    showSection("race");
+    loadStats();
+    updateOverviewKPIs();
+  } else {
+    err.textContent = "Falsches Passwort.";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Login sichtbar lassen
+  showLogin();
+
+  // Wenn schon mal entsperrt: direkt rein
+  if (localStorage.getItem("bierwagen_unlocked") === "1") {
+    showApp();
+    showSection("race");
+    loadStats();
+    updateOverviewKPIs();
+  }
+
+  document.getElementById("btnLogin").addEventListener("click", tryLoginWithPassword);
+
+  document.getElementById("loginPassword").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") tryLoginWithPassword();
+  });
+});
+
 </script>
 
 </body>
