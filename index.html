@@ -586,7 +586,7 @@ async function cloudGetStats() {
   return await res.json();
 }
 
-async function cloudAddDrink() {
+async function cloudAddDrink(amount) {
   const res = await fetch(`${SUPABASE_URL}/functions/v1/add-drink`, {
     method: "POST",
     headers: {
@@ -597,9 +597,13 @@ async function cloudAddDrink() {
     body: JSON.stringify({ code: ROOM_CODE, amount }),
   });
 
-  if (!res.ok) throw new Error(await res.text());
-  return await res.json();
+  const text = await res.text();         // hilfreich zum Debuggen
+  if (!res.ok) throw new Error(text);
+
+  return JSON.parse(text);
 }
+
+
 
 // --- STATS (CLOUD via Supabase) ---
 async function loadStats() {
