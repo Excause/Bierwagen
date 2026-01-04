@@ -107,6 +107,42 @@
       border-radius: 10px;
       margin: 10px 0;
     }
+    .ghost {
+      background: transparent;
+      color: var(--accent);
+      border: 2px solid rgba(255,255,255,0.12);
+      font-weight: bold;
+    }
+
+    .player-picker {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 10px 0 15px 0;
+    }
+
+    .player-picker .player-btn {
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: none;
+      color: #111;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .action-panel {
+      background: rgba(0,0,0,0.25);
+      padding: 8px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .action-title { font-weight: bold; }
+
+    .action-buttons button { margin-right: 6px; }
   </style>
 </head>
 <body>
@@ -125,16 +161,35 @@
     <div id="race">
       <h2>Autorennen</h2>
 
-      <label>Spieleranzahl</label><br>
-      <input id="players" type="number" min="1" max="8" value="4" /><br>
+      <!-- SETUP (verschwindet nach Start) -->
+      <div id="raceSetup">
+        <label>Spieleranzahl</label><br>
+        <input id="players" type="number" min="1" max="8" value="4" /><br>
 
-      <label>Zieldistanz (Punkte)</label><br>
-      <input id="distance" type="number" min="5" value="10" /><br>
+        <label>Zieldistanz (Punkte)</label><br>
+        <input id="distance" type="number" min="5" value="10" /><br>
 
-      <button onclick="startRace()">Rennen starten</button>
+        <button onclick="startRace()">Rennen starten</button>
+      </div>
+
+      <!-- IN-GAME UI -->
+      <div id="raceUI" class="hidden">
+        <div id="playerPicker" class="player-picker"></div>
+
+        <div id="actionPanel" class="action-panel hidden">
+          <div class="action-title">
+            Ausgewählt: <span id="selectedPlayerLabel">-</span>
+          </div>
+          <div class="action-buttons">
+            <button onclick="giveDrink(1)">🍺 Bier (+1)</button>
+            <button onclick="giveDrink(0.5)">🍺 Radler (+0.5)</button>
+          </div>
+        </div>
+
+        <button class="ghost" onclick="resetRace()">↩️ Neues Rennen</button>
+      </div>
 
       <div id="track" class="track"></div>
-      <div id="controls"></div>
     </div>
 
     <!-- STATS -->
@@ -174,7 +229,14 @@
 
     raceData = [];
     document.getElementById('track').innerHTML = '';
-    document.getElementById('controls').innerHTML = '';
+    document.getElementById('playerPicker').innerHTML = '';
+
+    // toggle UI
+    document.getElementById('raceSetup').classList.add('hidden');
+    document.getElementById('raceUI').classList.remove('hidden');
+    document.getElementById('actionPanel').classList.add('hidden');
+    selectedPlayer = null;
+    document.getElementById('selectedPlayerLabel').innerText = '-';
 
     for (let i = 0; i < count; i++) {
       raceData.push({ points: 0, color: `hsl(${i * 360 / count}, 80%, 60%)` });
@@ -190,24 +252,33 @@
       lane.appendChild(car);
       document.getElementById('track').appendChild(lane);
 
-    const btnBeer = document.createElement('button');
-    btnBeer.innerText = `Spieler ${i + 1}: 🍺 Bier`;
-    btnBeer.onclick = () => moveCar(i, 1);
+      const picker = document.createElement('button');
+      picker.className = 'player-btn';
+      picker.innerText = `Spieler ${i + 1}`;
+      picker.style.background = raceData[i].color;
+      picker.onclick = () => {
+        selectedPlayer = i;
+        document.getElementById('selectedPlayerLabel').innerText = `Spieler ${i + 1}`;
+        document.getElementById('actionPanel').classList.remove('hidden');
+      };
 
-    const btnRadler = document.createElement('button');
-    btnRadler.innerText = `Spieler ${i + 1}: 🍺 Radler`;
-    btnRadler.onclick = () => moveCar(i, 0.5);
-
-
-      document.getElementById('controls').appendChild(btnBeer);
-      document.getElementById('controls').appendChild(btnRadler);
+      document.getElementById('playerPicker').appendChild(picker);
     }
   }
 
-function moveCar(index, points) {
+let selectedPlayer = null;
+
+function giveDrink(points) {
+  if (selectedPlayer === null) {
+    alert('Bitte zuerst einen Spieler wählen.');
+    return;
+  }
   // Statistik: jedes Getränk = 0.5 L
   addDrink(0.5);
+  moveCar(selectedPlayer, points);
+}
 
+function moveCar(index, points) {
   // Spielpunkte: Bier=1, Radler=0.5
   raceData[index].points += points;
 
@@ -223,6 +294,15 @@ function moveCar(index, points) {
   if (raceData[index].points >= finishDistance) {
     alert(`🏆 Spieler ${index + 1} gewinnt das Rennen!`);
   }
+}
+
+function resetRace() {
+  // clear UI and data
+  raceData = [];
+  document.getElementById('track').innerHTML = '';
+  document.getElementById('playerPicker').innerHTML = '';
+  document.getElementById('raceSetup').classList.remove('hidden');
+  document.getElementById('raceUI').classList.add('hidden');
 }
 
 
