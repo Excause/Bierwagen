@@ -517,21 +517,14 @@
 
 let selectedPlayer = null;
 
-function giveDrink(points) {
+async function giveDrink(points) {
   if (selectedPlayer === null) {
     alert('Bitte zuerst einen Spieler wählen.');
     return;
   }
-  // Statistik: jedes Getränk = 0.5 L
-  addDrink(0.5);
-  moveCar(selectedPlayer, points);
 
-  // Aktualisiere die Overview-KPIs, falls Overview aktiv ist
-  setTimeout(() => {
-    if (!document.getElementById("overviewView").classList.contains("hidden")) {
-      updateOverviewKPIs();
-    }
-  }, 0);
+  await addDrink(0.5); // wartet auf Cloud + render
+  moveCar(selectedPlayer, points); // dann erst das Auto bewegen
 }
 
 function moveCar(index, points) {
@@ -567,8 +560,44 @@ function resetRace() {
 
 
 
-/* ---------------- STATS (CLOUD via Supabase) ---------------- */
+// --- SUPABASE CLOUD STATS ---
+const SUPABASE_URL = "https://vrthtvecnbhzgkkguaat.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_t3ZMUJeiE2ZKxDAQd1T87w_U1KE0nlg";
 
+// Party-Code (später machen wir UI dafür)
+let ROOM_CODE = localStorage.getItem("bierwagen_room") || "HB-2026";
+
+async function cloudGetStats() {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/get-stats`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_ANON_KEY,
+      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ code: ROOM_CODE }),
+  });
+
+  if (!res.ok) throw new Error(await res.text());
+  return await res.json();
+}
+
+async function cloudAddDrink(amount) {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/add-drink`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_ANON_KEY,
+      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ code: ROOM_CODE, amount }),
+  });
+
+  if (!res.ok) throw new Error(await res.text());
+  return await res.json();
+}
+
+// --- STATS (CLOUD via Supabase) ---
 async function loadStats() {
   try {
     const data = await cloudGetStats();
@@ -686,44 +715,6 @@ function updateOverviewKPIs(){
   document.getElementById("ov-updated").textContent = `Update: ${latestStats.updatedAt.toLocaleTimeString()}`;
 }
 
-
-// --- SUPABASE CLOUD STATS ---
-const SUPABASE_URL = "https://vrthtvecnbhzgkkguaat.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_t3ZMUJeiE2ZKxDAQd1T87w_U1KE0nlg";
-
-
-// Party-Code (später machen wir UI dafür)
-let ROOM_CODE = localStorage.getItem("bierwagen_room") || "HB-2026";
-
-async function cloudGetStats() {
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/get-stats`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "apikey": SUPABASE_ANON_KEY,
-      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-    },
-    body: JSON.stringify({ code: ROOM_CODE }),
-  });
-
-  if (!res.ok) throw new Error(await res.text());
-  return await res.json();
-}
-
-async function cloudAddDrink(amount) {
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/add-drink`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "apikey": SUPABASE_ANON_KEY,
-      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-    },
-    body: JSON.stringify({ code: ROOM_CODE, amount }),
-  });
-
-  if (!res.ok) throw new Error(await res.text());
-  return await res.json();
-}
 
 // --- GAME CONTAINER MANAGEMENT (Overview) ---
 const gameRootEl = document.getElementById("race");
