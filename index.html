@@ -738,6 +738,9 @@ function mountGameIntoOverviewIfActive(){
   if (!gameRootEl || !overviewHost) return;
 
   if (isGameActive()){
+    // wichtig: sichtbar machen
+    gameRootEl.classList.remove('hidden');
+
     overviewHost.innerHTML = "";
     overviewHost.appendChild(gameRootEl);
   } else {
