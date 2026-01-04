@@ -143,7 +143,7 @@
 
       <div class="stats-box" id="statsContent"></div>
 
-      <button onclick="addDrink(1)">🍺 Bier hinzufügen</button>
+      <button onclick="addDrink(0.5)">🍺 Bier hinzufügen</button>
       <button onclick="addDrink(0.5)">🍺 Radler hinzufügen</button>
     </div>
 
@@ -204,19 +204,20 @@
   }
 
   function moveCar(index, points) {
-    if (points === 1) addDrink(1);
-    if (points === 0) addDrink(0.5);
+  // ✅ Liter: Bier und Radler sollen gleich gezählt werden (0.5L pro Klick)
+  addDrink(0.5);
 
-    raceData[index].points += points;
-    const percent = Math.min(raceData[index].points / finishDistance, 1);
+  // ✅ Punkte im Spiel: bleibt wie übergeben (Bier=1, Radler=0 in deinem Setup)
+  raceData[index].points += points;
 
-    const car = document.getElementById('car-' + index);
-    car.style.left = `calc(${percent * 100}% - 30px)`;
+  const percent = Math.min(raceData[index].points / finishDistance, 1);
+  const car = document.getElementById('car-' + index);
+  car.style.left = `calc(${percent * 100}% - 30px)`;
 
-    if (raceData[index].points >= finishDistance) {
-      alert(`🏆 Spieler ${index + 1} gewinnt das Rennen!`);
-    }
+  if (raceData[index].points >= finishDistance) {
+    alert(`🏆 Spieler ${index + 1} gewinnt das Rennen!`);
   }
+}
 
   /* ---------------- STATS ---------------- */
   const STATS_KEY = 'bierwagen_stats';
