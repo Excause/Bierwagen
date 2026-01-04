@@ -426,7 +426,7 @@ function tryLoginWithPassword() {
   }
 
   async function cloudAddDrink(amount) {
-  const url = `${SUPABASE_URL}/functions/v1/add-drink`;
+  const url = `${SUPABASE_URL}/functions/v1/add-drinks`;
   try {
     const res = await fetch(url, {
       method: "POST",
