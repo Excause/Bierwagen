@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Bierwagen Racing</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <style>
     :root {
       --green: #004225;
@@ -62,24 +63,47 @@
     .login-error { color: #ffb3b3; font-size: 0.95rem; margin-top: 8px; min-height: 1.1em; }
 
     /* MENU */
-    .menu { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+    .menu {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .menu-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
 
-   <div class="menu-right">
-  <span id="liveDot" class="pill" style="display:flex;align-items:center;gap:8px;">
-    <span id="livePulse" style="width:10px;height:10px;border-radius:50%;background:#2ecc71;display:inline-block;opacity:0.35;"></span>
-    <span id="liveText">LIVE</span>
-  </span>
+    .pill{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      font-size: 0.95rem;
+      white-space: nowrap;
+    }
 
-  <span class="pill" style="display:flex;align-items:center;gap:8px;">
-    Party:
-    <input id="roomInput" style="padding:6px 8px;border-radius:8px;border:none;width:120px;" />
-    <button class="ghost" onclick="applyRoomCode()">Set</button>
-  </span>
+    .ghost {
+      background: transparent;
+      color: var(--accent);
+      border: 2px solid rgba(255,255,255,0.12);
+      font-weight: bold;
+    }
 
-  <span id="userPill" class="pill">Nicht eingeloggt</span>
-  <button id="btnLogout" class="ghost">Logout</button>
-</div>
-
+    .btn-secondary{
+      background: rgba(255,255,255,0.08);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.18);
+      font-weight: 700;
+    }
 
     /* RACE */
     .track { background: #2e7d32; padding: 20px; border-radius: 10px; margin-top: 20px; }
@@ -125,8 +149,6 @@
     .stat-value { font-size: 2.4rem; font-weight: 800; color: var(--light); white-space: nowrap; letter-spacing: -0.5px; }
     .stat-label { font-size: 0.95rem; color: rgba(255,255,255,0.75); }
     .stat-sub { font-size: 0.82rem; color: rgba(255,255,255,0.6); }
-
-    .ghost { background: transparent; color: var(--accent); border: 2px solid rgba(255,255,255,0.12); font-weight: bold; }
 
     .player-picker { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 15px 0; }
     .player-picker .player-btn { padding: 8px 12px; border-radius: 10px; border: none; color: #111; font-weight: bold; cursor: pointer; }
@@ -199,928 +221,907 @@
       .overview-layout{ grid-template-columns: 1fr; }
       .overview-content{ min-height: 40vh; }
     }
+
     /* LIVE pulse */
-.pulse-on {
-  animation: pulse 1.2s ease-in-out infinite;
-}
-@keyframes pulse {
-  0%   { transform: scale(1); opacity: 0.35; }
-  50%  { transform: scale(1.25); opacity: 0.95; }
-  100% { transform: scale(1); opacity: 0.35; }
-}
+    .pulse-on { animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse {
+      0%   { transform: scale(1); opacity: 0.35; }
+      50%  { transform: scale(1.25); opacity: 0.95; }
+      100% { transform: scale(1); opacity: 0.35; }
+    }
 
-/* Roulette spin */
-.spin {
-  animation: spin 900ms linear infinite;
-}
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
+    /* Roulette spin */
+    .spin { animation: spin 900ms linear infinite; }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
 
-/* Winner overlay */
-#winnerOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.65);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  padding: 20px;
-}
-#winnerCard{
-  background: rgba(0,0,0,0.55);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 18px;
-  padding: 26px;
-  max-width: 520px;
-  width: 100%;
-  text-align: center;
-  box-shadow: 0 18px 60px rgba(0,0,0,0.6);
-  transform: translateY(10px) scale(0.98);
-  opacity: 0;
-  animation: pop 280ms ease forwards;
-}
-@keyframes pop{
-  to { transform: translateY(0) scale(1); opacity: 1; }
-}
-#winnerTitle{ font-size: 2rem; font-weight: 900; margin: 0; }
-#winnerSub{ opacity: 0.85; margin-top: 8px; }
-
+    /* Winner overlay */
+    #winnerOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+    #winnerCard{
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 18px;
+      padding: 26px;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.6);
+      transform: translateY(10px) scale(0.98);
+      opacity: 0;
+      animation: pop 280ms ease forwards;
+    }
+    @keyframes pop{ to { transform: translateY(0) scale(1); opacity: 1; } }
+    #winnerTitle{ font-size: 2rem; font-weight: 900; margin: 0; }
+    #winnerSub{ opacity: 0.85; margin-top: 8px; }
   </style>
 </head>
+
 <body>
 
-<!-- LOGIN VIEW -->
-<div id="login" >
-  <div class="login-box">
-    <h2>🔐 Zugang</h2>
-    <div class="login-hint">Passwort eingeben, um fortzufahren.</div>
+  <!-- LOGIN VIEW -->
+  <div id="login">
+    <div class="login-box">
+      <h2>🔐 Zugang</h2>
+      <div class="login-hint">Passwort eingeben, um fortzufahren.</div>
 
-    <label>Passwort</label><br>
-    <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" /><br>
+      <label>Passwort</label><br>
+      <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" /><br>
 
-    <button id="btnLogin">Los geht’s</button>
+      <button id="btnLogin">Los geht’s</button>
 
-    <div id="loginError" class="login-error"></div>
+      <div id="loginError" class="login-error"></div>
+    </div>
   </div>
-</div>
 
-<!-- APP -->
-<div id="app" class="hidden">
-  <div class="container">
-    <h1>🏁 Bierwagen Racing</h1>
+  <!-- APP -->
+  <div id="app" class="hidden">
+    <div class="container">
+      <h1>🏁 Bierwagen Racing</h1>
 
-    <div class="menu">
-      <button onclick="showSection('race')">🏎️ Minispiel</button>
-      <button onclick="showSection('stats')">📊 Statistik</button>
-      <button onclick="showSection('roulette')">🎰 Roulette</button>
-      <button onclick="showSection('overviewView')" id="nav-overview" class="nav-btn">Overview</button>
+      <div class="menu">
+        <button onclick="showSection('race')">🏎️ Minispiel</button>
+        <button onclick="showSection('stats')">📊 Statistik</button>
+        <button onclick="showSection('roulette')">🎰 Roulette</button>
+        <button onclick="showSection('overviewView')" id="nav-overview" class="nav-btn">Overview</button>
 
-      <div class="menu-right">
-        <span id="userPill" class="pill">Nicht eingeloggt</span>
-        <button id="btnLogout" class="ghost">Logout</button>
-      </div>
-    </div>
+        <div class="menu-right">
+          <span id="liveDot" class="pill">
+            <span id="livePulse" style="width:10px;height:10px;border-radius:50%;background:#2ecc71;display:inline-block;opacity:0.35;"></span>
+            <span id="liveText">LIVE</span>
+          </span>
 
-    <!-- RACE SETUP -->
-    <div id="race">
-      <h2>Autorennen</h2>
+          <span class="pill">
+            Party:
+            <input id="roomInput" style="padding:6px 8px;border-radius:8px;border:none;width:120px;" />
+            <button class="ghost" onclick="applyRoomCode()">Set</button>
+          </span>
 
-      <div id="raceSetup">
-        <label>Spieleranzahl</label><br>
-        <input id="players" type="number" min="1" max="8" value="4" /><br>
-
-        <label>Zieldistanz (Punkte)</label><br>
-        <input id="distance" type="number" min="5" value="10" /><br>
-
-        <button onclick="startRace()">Rennen starten</button>
-      </div>
-
-      <div id="raceUI" class="hidden">
-        <div id="playerPicker" class="player-picker"></div>
-
-        <div id="actionPanel" class="action-panel hidden">
-          <div class="action-title">
-            Ausgewählt: <span id="selectedPlayerLabel">-</span>
-          </div>
-          <div class="action-buttons">
-            <button onclick="giveDrink(1)">🍺 Bier (+1)</button>
-            <button onclick="giveDrink(0.5)">🍺 Radler (+0.5)</button>
-          </div>
-        </div>
-
-        <button class="ghost" onclick="resetRace()">↩️ Neues Rennen</button>
-        <button class="ghost" onclick="undoLastMove()">↩️ Rückgängig</button>
-
-
-      </div>
-
-      <div id="track" class="track"></div>
-    </div>
-
-    <!-- STATS -->
-    <div id="stats" class="hidden">
-      <h2>Statistik</h2>
-
-      <div class="stats-box" id="statsContent"></div>
-
-      <div class="stats-actions">
-        <button onclick="addDrink(0.5)">🍺 Bier hinzufügen (0,5 L)</button>
-        <button onclick="addDrink(0.5)">🍺 Radler hinzufügen (0,5 L)</button>
-         <button class="ghost" onclick="resetStats()">🧹 Statistik zurücksetzen</button>
-      </div>
-    </div>
-<!-- ROULETTE -->
-<div id="roulette" class="hidden">
-  <h2>🎰 Freibier Roulette</h2>
-
-  <div class="stats-box" style="max-width:560px;margin:auto;">
-    <div style="text-align:center;opacity:0.85;margin-bottom:10px;">
-      48%: Freibier 🍺 (0€) · 52%: Doppelter Preis 💸 (zählt als 1,0 L)
-    </div>
-
-    <div id="rouletteWheel" style="
-      width:160px;height:160px;border-radius:50%;
-      margin: 16px auto;
-      display:flex;align-items:center;justify-content:center;
-      font-size:64px;
-      border: 3px solid rgba(255,255,255,0.20);
-      background: rgba(255,255,255,0.04);
-      user-select:none;
-      position:relative;
-      overflow:hidden;
-    ">🍺</div>
-
-    <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
-      <button id="btnRoulette" onclick="spinRoulette()">Drehen</button>
-      <button class="ghost" onclick="resetRoulette()">Reset</button>
-    </div>
-
-    <div id="rouletteResult" style="text-align:center;font-weight:800;font-size:1.25rem;margin-top:14px;min-height:1.4em;"></div>
-    <div id="rouletteHint" style="text-align:center;opacity:0.75;margin-top:6px;min-height:1.2em;"></div>
-  </div>
-</div>
-
-    <!-- OVERVIEW -->
-    <section id="overviewView" class="view hidden">
-      <div class="overview-layout">
-        <div class="overview-stats">
-          <h2 class="overview-title">Bierwagen Overview</h2>
-
-          <div class="kpi-grid">
-            <div class="kpi-card">
-              <div class="kpi-label">Gesamt (L)</div>
-              <div id="ov-total" class="kpi-value">–</div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-label">Heute (L)</div>
-              <div id="ov-today" class="kpi-value">–</div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-label">Liter / Stunde</div>
-              <div id="ov-lph" class="kpi-value">–</div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-label">Level</div>
-              <div id="ov-level" class="kpi-value">–</div>
-            </div>
-          </div>
-
-          <div class="overview-meta">
-            <span id="ov-partycode">Party: –</span>
-            <span id="ov-updated">Update: –</span>
-          </div>
-
-          <button id="btn-fullscreen" class="btn-secondary">Fullscreen</button>
-        </div>
-
-        <div class="overview-content">
-          <div id="overviewGameHost" class="overview-gamehost">
-            <div class="placeholder">
-              <div class="placeholder-title">Kein Minispiel aktiv</div>
-              <div class="placeholder-sub">Starte ein Spiel, dann erscheint es hier groß.</div>
-            </div>
-          </div>
+          <span id="userPill" class="pill">Nicht eingeloggt</span>
+          <button id="btnLogout" class="ghost">Logout</button>
         </div>
       </div>
-    </section>
 
+      <!-- RACE SETUP -->
+      <div id="race">
+        <h2>Autorennen</h2>
+
+        <div id="raceSetup">
+          <label>Spieleranzahl</label><br>
+          <input id="players" type="number" min="1" max="8" value="4" /><br>
+
+          <label>Zieldistanz (Punkte)</label><br>
+          <input id="distance" type="number" min="5" value="10" /><br>
+
+          <button onclick="startRace()">Rennen starten</button>
+        </div>
+
+        <div id="raceUI" class="hidden">
+          <div id="playerPicker" class="player-picker"></div>
+
+          <div id="actionPanel" class="action-panel hidden">
+            <div class="action-title">
+              Ausgewählt: <span id="selectedPlayerLabel">-</span>
+            </div>
+            <div class="action-buttons">
+              <button onclick="giveDrink(1)">🍺 Bier (+1)</button>
+              <button onclick="giveDrink(0.5)">🍺 Radler (+0.5)</button>
+            </div>
+          </div>
+
+          <button class="ghost" onclick="resetRace()">↩️ Neues Rennen</button>
+          <button class="ghost" onclick="undoLastMove()">↩️ Rückgängig</button>
+        </div>
+
+        <div id="track" class="track"></div>
+      </div>
+
+      <!-- STATS -->
+      <div id="stats" class="hidden">
+        <h2>Statistik</h2>
+
+        <div class="stats-box" id="statsContent"></div>
+
+        <div class="stats-actions">
+          <button onclick="addDrink(0.5)">🍺 Bier hinzufügen (0,5 L)</button>
+          <button onclick="addDrink(0.5)">🍺 Radler hinzufügen (0,5 L)</button>
+          <button class="ghost" onclick="resetStats()">🧹 Statistik zurücksetzen</button>
+        </div>
+      </div>
+
+      <!-- ROULETTE -->
+      <div id="roulette" class="hidden">
+        <h2>🎰 Freibier Roulette</h2>
+
+        <div class="stats-box" style="max-width:560px;margin:auto;">
+          <div style="text-align:center;opacity:0.85;margin-bottom:10px;">
+            48%: Freibier 🍺 (0€) · 52%: Doppelter Preis 💸 (zählt als 1,0 L)
+          </div>
+
+          <div id="rouletteWheel" style="
+            width:160px;height:160px;border-radius:50%;
+            margin: 16px auto;
+            display:flex;align-items:center;justify-content:center;
+            font-size:64px;
+            border: 3px solid rgba(255,255,255,0.20);
+            background: rgba(255,255,255,0.04);
+            user-select:none;
+            position:relative;
+            overflow:hidden;
+          ">🍺</div>
+
+          <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+            <button id="btnRoulette" onclick="spinRoulette()">Drehen</button>
+            <button class="ghost" onclick="resetRoulette()">Reset</button>
+          </div>
+
+          <div id="rouletteResult" style="text-align:center;font-weight:800;font-size:1.25rem;margin-top:14px;min-height:1.4em;"></div>
+          <div id="rouletteHint" style="text-align:center;opacity:0.75;margin-top:6px;min-height:1.2em;"></div>
+        </div>
+      </div>
+
+      <!-- OVERVIEW -->
+      <section id="overviewView" class="view hidden">
+        <div class="overview-layout">
+          <div class="overview-stats">
+            <h2 class="overview-title">Bierwagen Overview</h2>
+
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-label">Gesamt (L)</div>
+                <div id="ov-total" class="kpi-value">–</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Heute (L)</div>
+                <div id="ov-today" class="kpi-value">–</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Liter / Stunde</div>
+                <div id="ov-lph" class="kpi-value">–</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Level</div>
+                <div id="ov-level" class="kpi-value">–</div>
+              </div>
+            </div>
+
+            <div class="overview-meta">
+              <span id="ov-partycode">Party: –</span>
+              <span id="ov-updated">Update: –</span>
+            </div>
+
+            <button id="btn-fullscreen" class="btn-secondary">Fullscreen</button>
+          </div>
+
+          <div class="overview-content">
+            <div id="overviewGameHost" class="overview-gamehost">
+              <div class="placeholder">
+                <div class="placeholder-title">Kein Minispiel aktiv</div>
+                <div class="placeholder-sub">Starte ein Spiel, dann erscheint es hier groß.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
   </div>
-</div>
 
-<!-- Supabase JS SDK (v2) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Supabase JS SDK (v2) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<script>
- 
-  const SUPABASE_URL = "https://vrthtvecnbhzgkkguaat.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_t3ZMUJeiE2ZKxDAQd1T87w_U1KE0nlg";
+  <script>
+    const SUPABASE_URL = "https://vrthtvecnbhzgkkguaat.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_t3ZMUJeiE2ZKxDAQd1T87w_U1KE0nlg";
 
-  // Nur Passwort (Frontend-Schutz)
-  const APP_PASSWORD = "787";
+    // Nur Passwort (Frontend-Schutz)
+    const APP_PASSWORD = "787";
 
-  // Party-Code
-  let ROOM_CODE = localStorage.getItem("bierwagen_room") || "HB-2026";
+    // Party-Code
+    let ROOM_CODE = localStorage.getItem("bierwagen_room") || "HB-2026";
 
-  function applyRoomCode() {
-  const input = document.getElementById("roomInput");
-  const next = (input?.value || "").trim();
-  if (!next) return;
+    function applyRoomCode() {
+      const input = document.getElementById("roomInput");
+      const next = (input?.value || "").trim();
+      if (!next) return;
 
-  ROOM_CODE = next;
-  localStorage.setItem("bierwagen_room", ROOM_CODE);
+      ROOM_CODE = next;
+      localStorage.setItem("bierwagen_room", ROOM_CODE);
 
-  // sofort Stats neu laden
-  loadStats().catch(() => {});
-  updateOverviewKPIs();
-
-  // auch pending queue auf neuen Raum anwenden (optional: hier bewusst NICHT mischen)
-  // -> wir lassen pending Drinks für den aktuellen Raum (sicherer).
-  updatePartyPill();
-}
-
-function updatePartyPill() {
-  const input = document.getElementById("roomInput");
-  if (input) input.value = ROOM_CODE;
-}
-
-
-  /* ---------- Views ---------- */
- function showLogin() {
-  const login = document.getElementById("login");
-  const app = document.getElementById("app");
-
-  login.classList.remove("hidden");
-  login.style.display = "flex";
-
-  app.classList.add("hidden");
-  app.style.display = "none";
-}
-
-function showApp() {
-  const login = document.getElementById("login");
-  const app = document.getElementById("app");
-
-  login.classList.add("hidden");
-  login.style.display = "none";
-
-  app.classList.remove("hidden");
-  app.style.display = "block";
-}
-
-
-  function setUserPill(text) {
-    const pill = document.getElementById("userPill");
-    if (pill) pill.textContent = text || "Offline";
-  }
-
-  function isUnlocked() {
-    return localStorage.getItem("bierwagen_unlocked") === "1";
-  }
-  function unlockApp() {
-    localStorage.setItem("bierwagen_unlocked", "1");
-  }
-  function lockApp() {
-    localStorage.removeItem("bierwagen_unlocked");
-  }
-
-  /* ---------- Password Login ---------- */
-function tryLoginWithPassword() {
-  const pw = document.getElementById("loginPassword").value.trim();
-  const err = document.getElementById("loginError");
-
-  if (pw === APP_PASSWORD) {
-    unlockApp();
-    err.textContent = "";
-
-    // UI sofort umschalten
-    showApp();
-    setUserPill("Zugang OK");
-    showSection("race");
-
-    // Stats im Hintergrund laden (ohne Popups)
-    loadStats().catch(() => {});
-    updateOverviewKPIs();
-    startStatsAutoRefresh();
-
-  } else {
-    err.textContent = "Falsches Passwort.";
-  }
-}
-
-
-  /* ---------- NAV ---------- */
-  function showSection(id) {
-    if (id !== "overviewView") restoreGameToNormalPlace();
-
-    document.getElementById('race').classList.add('hidden');
-    document.getElementById('stats').classList.add('hidden');
-    document.getElementById('roulette').classList.add('hidden');
-    document.getElementById('overviewView').classList.add('hidden');
-    document.getElementById(id).classList.remove('hidden');
-
-    if (id === "overviewView") {
+      loadStats().catch(() => {});
       updateOverviewKPIs();
-      mountGameIntoOverviewIfActive();
-    }
-  }
 
-  /* ---------- Supabase Edge Functions (ohne JWT) ---------- */
-  async function cloudGetStats() {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/get-stats`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": SUPABASE_ANON_KEY
-      },
-      body: JSON.stringify({ code: ROOM_CODE }),
-    });
-
-    if (!res.ok) throw new Error(await res.text());
-    return await res.json();
-  }
-
-  async function cloudAddDrink(amount) {
-  const url = `${SUPABASE_URL}/functions/v1/add-drinks`;
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": SUPABASE_ANON_KEY,
-      },
-      body: JSON.stringify({ code: ROOM_CODE, amount }),
-    });
-
-    const text = await res.text();
-    if (!res.ok) {
-      // gibt dir 401/403/500 samt body
-      throw new Error(`HTTP ${res.status}: ${text}`);
+      updatePartyPill();
     }
 
-    // Debug: falls mal kein JSON zurückkommt
-    try {
-      return JSON.parse(text);
-    } catch {
-      throw new Error(`Antwort ist kein JSON: ${text.slice(0, 200)}`);
+    function updatePartyPill() {
+      const input = document.getElementById("roomInput");
+      if (input) input.value = ROOM_CODE;
+      document.getElementById("ov-partycode")?.textContent && (document.getElementById("ov-partycode").textContent = `Party: ${ROOM_CODE}`);
     }
-  } catch (e) {
-    // DAS ist der wichtige Teil: echte Ursache loggen
-    console.error("cloudAddDrink failed:", e);
-    throw e;
-  }
-}
 
-async function cloudResetStats() {
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/reset-stats`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "apikey": SUPABASE_ANON_KEY
-    },
-    body: JSON.stringify({ code: ROOM_CODE }),
-  });
+    /* ---------- Views ---------- */
+    function showLogin() {
+      const login = document.getElementById("login");
+      const app = document.getElementById("app");
 
-  if (!res.ok) throw new Error(await res.text());
-  return await res.json();
-}
+      login.classList.remove("hidden");
+      login.style.display = "flex";
 
-async function resetStats() {
-  const ok = confirm("Statistik wirklich zurücksetzen? (Gesamt & Heute werden auf 0 gesetzt)");
-  if (!ok) return;
+      app.classList.add("hidden");
+      app.style.display = "none";
+    }
 
-  try {
-    const data = await cloudResetStats();
-    renderStatsFromData(data);
-  } catch (e) {
-    console.error("resetStats error:", e);
-    alert("Reset-Fehler: " + (e?.message || e));
-  }
-}
-function livePulseOnce() {
-  const dot = document.getElementById("livePulse");
-  if (!dot) return;
-  dot.classList.add("pulse-on");
+    function showApp() {
+      const login = document.getElementById("login");
+      const app = document.getElementById("app");
 
-  // kurzer "Boost" nach Update
-  dot.style.opacity = "1";
-  setTimeout(() => { dot.style.opacity = ""; }, 250);
-}
+      login.classList.add("hidden");
+      login.style.display = "none";
 
-function setLiveState(ok) {
-  const dot = document.getElementById("livePulse");
-  const text = document.getElementById("liveText");
-  if (!dot || !text) return;
+      app.classList.remove("hidden");
+      app.style.display = "block";
+    }
 
-  if (ok) {
-    dot.style.background = "#2ecc71";
-    text.textContent = "LIVE";
-  } else {
-    dot.style.background = "#e74c3c";
-    text.textContent = "OFF";
-  }
-}
+    function setUserPill(text) {
+      const pill = document.getElementById("userPill");
+      if (pill) pill.textContent = text || "Offline";
+    }
 
-  /* ---------- STATS ---------- */
-  let latestStats = null;
-  let statsAutoRefreshTimer = null;
+    function isUnlocked() {
+      return localStorage.getItem("bierwagen_unlocked") === "1";
+    }
+    function unlockApp() {
+      localStorage.setItem("bierwagen_unlocked", "1");
+    }
+    function lockApp() {
+      localStorage.removeItem("bierwagen_unlocked");
+    }
 
+    /* ---------- Password Login ---------- */
+    function tryLoginWithPassword() {
+      const pw = document.getElementById("loginPassword").value.trim();
+      const err = document.getElementById("loginError");
 
-  async function loadStats() {
-    try {
-      const data = await cloudGetStats();
-      renderStatsFromData(data);
-    } catch (e) {
-      console.error("loadStats error:", e);
+      if (pw === APP_PASSWORD) {
+        unlockApp();
+        err.textContent = "";
+
+        showApp();
+        setUserPill("Zugang OK");
+        showSection("race");
+
+        loadStats().catch(() => {});
+        updateOverviewKPIs();
+        startStatsAutoRefresh();
+      } else {
+        err.textContent = "Falsches Passwort.";
+      }
+    }
+
+    /* ---------- NAV ---------- */
+    function showSection(id) {
+      if (id !== "overviewView") restoreGameToNormalPlace();
+
+      document.getElementById('race').classList.add('hidden');
+      document.getElementById('stats').classList.add('hidden');
+      document.getElementById('roulette').classList.add('hidden');
+      document.getElementById('overviewView').classList.add('hidden');
+
+      document.getElementById(id).classList.remove('hidden');
+
+      if (id === "overviewView") {
+        updateOverviewKPIs();
+        mountGameIntoOverviewIfActive();
+      }
+    }
+
+    /* ---------- Supabase Edge Functions (ohne JWT) ---------- */
+    async function cloudGetStats() {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/get-stats`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({ code: ROOM_CODE }),
+      });
+
+      if (!res.ok) throw new Error(await res.text());
+      return await res.json();
+    }
+
+    async function cloudAddDrink(amount) {
+      const url = `${SUPABASE_URL}/functions/v1/add-drinks`;
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ code: ROOM_CODE, amount }),
+        });
+
+        const text = await res.text();
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${text}`);
+        }
+
+        try {
+          return JSON.parse(text);
+        } catch {
+          throw new Error(`Antwort ist kein JSON: ${text.slice(0, 200)}`);
+        }
+      } catch (e) {
+        console.error("cloudAddDrink failed:", e);
+        throw e;
+      }
+    }
+
+    async function cloudResetStats() {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/reset-stats`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({ code: ROOM_CODE }),
+      });
+
+      if (!res.ok) throw new Error(await res.text());
+      return await res.json();
+    }
+
+    async function resetStats() {
+      const ok = confirm("Statistik wirklich zurücksetzen? (Gesamt & Heute werden auf 0 gesetzt)");
+      if (!ok) return;
+
+      try {
+        const data = await cloudResetStats();
+        renderStatsFromData(data);
+      } catch (e) {
+        console.error("resetStats error:", e);
+        alert("Reset-Fehler: " + (e?.message || e));
+      }
+    }
+
+    function livePulseOnce() {
+      const dot = document.getElementById("livePulse");
+      if (!dot) return;
+      dot.classList.add("pulse-on");
+
+      dot.style.opacity = "1";
+      setTimeout(() => { dot.style.opacity = ""; }, 250);
+    }
+
+    function setLiveState(ok) {
+      const dot = document.getElementById("livePulse");
+      const text = document.getElementById("liveText");
+      if (!dot || !text) return;
+
+      if (ok) {
+        dot.style.background = "#2ecc71";
+        text.textContent = "LIVE";
+      } else {
+        dot.style.background = "#e74c3c";
+        text.textContent = "OFF";
+      }
+    }
+
+    /* ---------- STATS ---------- */
+    let latestStats = null;
+    let statsAutoRefreshTimer = null;
+
+    // Optional: Queue, falls du später Offline-Buffer willst.
+    // Aktuell no-op, damit es NICHT crasht (bei dir war flushPendingDrinks() aufgerufen aber nicht definiert).
+    async function flushPendingDrinks() { /* intentionally empty */ }
+
+    async function loadStats() {
+      try {
+        const data = await cloudGetStats();
+        renderStatsFromData(data);
+      } catch (e) {
+        console.error("loadStats error:", e);
+        document.getElementById('statsContent').innerHTML = `
+          <div class="stat-card">
+            <div class="stat-top">
+              <div>
+                <div class="stat-value">—</div>
+                <div class="stat-label">Fehler beim Laden</div>
+              </div>
+              <div class="stat-icon">⚠️</div>
+            </div>
+            <div class="stat-sub">${(e?.message || e)}</div>
+          </div>
+        `;
+      }
+    }
+
+    function startStatsAutoRefresh() {
+      if (statsAutoRefreshTimer) return;
+
+      let tick = 0;
+
+      statsAutoRefreshTimer = setInterval(async () => {
+        if (!isUnlocked()) return;
+        if (drinkBusy) return;
+
+        tick++;
+
+        try {
+          const data = await cloudGetStats();
+
+          const newTotal = Number(data.total);
+          const newToday = Number(data.today);
+
+          if (!latestStats || newTotal !== latestStats.total || newToday !== latestStats.today) {
+            renderStatsFromData(data);
+          } else if (!document.getElementById("overviewView").classList.contains("hidden")) {
+            latestStats.updatedAt = new Date();
+            updateOverviewKPIs();
+          }
+
+          setLiveState(true);
+          livePulseOnce();
+
+          if (tick % 3 === 0) {
+            flushPendingDrinks();
+          }
+        } catch (e) {
+          setLiveState(false);
+          console.debug("Auto-Refresh Stats fehlgeschlagen:", e?.message || e);
+        }
+      }, 1000);
+    }
+
+    function stopStatsAutoRefresh() {
+      if (!statsAutoRefreshTimer) return;
+      clearInterval(statsAutoRefreshTimer);
+      statsAutoRefreshTimer = null;
+    }
+
+    async function addDrink(amount) {
+      try {
+        const data = await cloudAddDrink(amount);
+        renderStatsFromData(data);
+      } catch (e) {
+        console.error("addDrink error:", e);
+        alert("Sync-Fehler: " + (e?.message || e));
+      }
+    }
+
+    function renderStatsFromData(data) {
+      const createdMs = new Date(data.created).getTime();
+      const hours = Math.max(0.001, (Date.now() - createdMs) / 1000 / 3600);
+
+      const total = Number(data.total);
+      const today = Number(data.today);
+
+      const lph = total / hours;
+      const level = Math.floor(total / 5);
+
       document.getElementById('statsContent').innerHTML = `
         <div class="stat-card">
           <div class="stat-top">
             <div>
-              <div class="stat-value">—</div>
-              <div class="stat-label">Fehler beim Laden</div>
+              <div class="stat-value">${total.toFixed(1)} L</div>
+              <div class="stat-label">🍺 Gesamt getrunken</div>
             </div>
-            <div class="stat-icon">⚠️</div>
+            <div class="stat-icon">🍻</div>
           </div>
-          <div class="stat-sub">${(e?.message || e)}</div>
+          <div class="stat-sub">Seit ${Math.round(hours)} Std · Level ${level}</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <div>
+              <div class="stat-value">${today.toFixed(1)} L</div>
+              <div class="stat-label">📅 Heute</div>
+            </div>
+            <div class="stat-icon">📅</div>
+          </div>
+          <div class="stat-sub">Tageswert — frisch gezählt</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <div>
+              <div class="stat-value">${lph.toFixed(2)} L/h</div>
+              <div class="stat-label">⏱️ Liter pro Stunde</div>
+            </div>
+            <div class="stat-icon">⚡</div>
+          </div>
+          <div class="stat-sub">Durchschnitt seit Beginn</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <div>
+              <div class="stat-value">${level}</div>
+              <div class="stat-label">🤪 Bierwagen-Level</div>
+            </div>
+            <div class="stat-icon">🏆</div>
+          </div>
+          <div class="stat-sub">Je 5 L ein Level</div>
         </div>
       `;
-    }
-  }
-function startStatsAutoRefresh() {
-  if (statsAutoRefreshTimer) return;
 
-  let tick = 0;
+      latestStats = { total, today, lph, level, updatedAt: new Date() };
 
-  statsAutoRefreshTimer = setInterval(async () => {
-    if (!isUnlocked()) return;
-    if (drinkBusy) return;
-
-    tick++;
-
-    try {
-      const data = await cloudGetStats();
-
-      const newTotal = Number(data.total);
-      const newToday = Number(data.today);
-
-      if (!latestStats || newTotal !== latestStats.total || newToday !== latestStats.today) {
-        renderStatsFromData(data);
-      } else if (!document.getElementById("overviewView").classList.contains("hidden")) {
-        latestStats.updatedAt = new Date();
+      if (!document.getElementById("overviewView").classList.contains("hidden")) {
         updateOverviewKPIs();
       }
-
-      setLiveState(true);
-      livePulseOnce();
-
-      // alle 3 Sekunden: Pending Drinks flushen
-      if (tick % 3 === 0) {
-        flushPendingDrinks();
-      }
-    } catch (e) {
-      setLiveState(false);
-      // still
-      console.debug("Auto-Refresh Stats fehlgeschlagen:", e?.message || e);
     }
-  }, 1000);
-}
 
-let rouletteRunning = false;
+    function updateOverviewKPIs(){
+      if (!latestStats) return;
 
-function resetRoulette(){
-  rouletteRunning = false;
-  const wheel = document.getElementById("rouletteWheel");
-  const btn = document.getElementById("btnRoulette");
-  if (wheel) wheel.classList.remove("spin");
-  if (btn) btn.disabled = false;
-  document.getElementById("rouletteResult").textContent = "";
-  document.getElementById("rouletteHint").textContent = "";
-}
+      document.getElementById("ov-total").textContent = `${latestStats.total.toFixed(1)} L`;
+      document.getElementById("ov-today").textContent = `${latestStats.today.toFixed(1)} L`;
+      document.getElementById("ov-lph").textContent   = `${latestStats.lph.toFixed(2)} L/h`;
+      document.getElementById("ov-level").textContent = `${latestStats.level}`;
 
-async function spinRoulette(){
-  if (rouletteRunning) return;
-  rouletteRunning = true;
+      document.getElementById("ov-partycode").textContent = `Party: ${ROOM_CODE}`;
+      document.getElementById("ov-updated").textContent = `Update: ${latestStats.updatedAt.toLocaleTimeString()}`;
+    }
 
-  const wheel = document.getElementById("rouletteWheel");
-  const resultEl = document.getElementById("rouletteResult");
-  const hintEl = document.getElementById("rouletteHint");
-  const btn = document.getElementById("btnRoulette");
+    /* ---------- ROULETTE ---------- */
+    let rouletteRunning = false;
 
-  btn.disabled = true;
-  resultEl.textContent = "";
-  hintEl.textContent = "Dreht…";
-  wheel.classList.add("spin");
-
-  const spinTime = 1400 + Math.random() * 900;
-
-  setTimeout(async () => {
-    wheel.classList.remove("spin");
-
-    const r = Math.random();
-    const winFreeBeer = r < 0.48;
-
-    try {
-      if (winFreeBeer) {
-        wheel.textContent = "🍺";
-        resultEl.textContent = "GEWONNEN: Freibier!";
-        hintEl.textContent = "Zählt: 0,0 L (kein Eintrag)";
-
-        // ✅ kein addDrink, weil frei
-      } else {
-        wheel.textContent = "💸";
-        resultEl.textContent = "PECH: Doppelter Preis!";
-        hintEl.textContent = "Zählt: 1,0 L (2× 0,5L)";
-
-        // ✅ doppelter Preis = 1.0 Liter
-        await addDrink(1.0);
-      }
-    } catch (e) {
-      hintEl.textContent = "Sync-Fehler – ggf. lokal gepuffert.";
-    } finally {
+    function resetRoulette(){
       rouletteRunning = false;
-      btn.disabled = false;
+      const wheel = document.getElementById("rouletteWheel");
+      const btn = document.getElementById("btnRoulette");
+      if (wheel) wheel.classList.remove("spin");
+      if (btn) btn.disabled = false;
+      document.getElementById("rouletteResult").textContent = "";
+      document.getElementById("rouletteHint").textContent = "";
     }
-  }, spinTime);
-}
 
-function stopStatsAutoRefresh() {
-  if (!statsAutoRefreshTimer) return;
-  clearInterval(statsAutoRefreshTimer);
-  statsAutoRefreshTimer = null;
-}
+    async function spinRoulette(){
+      if (rouletteRunning) return;
+      rouletteRunning = true;
 
-  async function addDrink(amount) {
-    try {
-      const data = await cloudAddDrink(amount);
-      renderStatsFromData(data);
-    } catch (e) {
-      console.error("addDrink error:", e);
-      alert("Sync-Fehler: " + (e?.message || e));
+      const wheel = document.getElementById("rouletteWheel");
+      const resultEl = document.getElementById("rouletteResult");
+      const hintEl = document.getElementById("rouletteHint");
+      const btn = document.getElementById("btnRoulette");
+
+      btn.disabled = true;
+      resultEl.textContent = "";
+      hintEl.textContent = "Dreht…";
+      wheel.classList.add("spin");
+
+      const spinTime = 1400 + Math.random() * 900;
+
+      setTimeout(async () => {
+        wheel.classList.remove("spin");
+
+        const r = Math.random();
+        const winFreeBeer = r < 0.48;
+
+        try {
+          if (winFreeBeer) {
+            wheel.textContent = "🍺";
+            resultEl.textContent = "GEWONNEN: Freibier!";
+            hintEl.textContent = "Zählt: 0,0 L (kein Eintrag)";
+          } else {
+            wheel.textContent = "💸";
+            resultEl.textContent = "PECH: Doppelter Preis!";
+            hintEl.textContent = "Zählt: 1,0 L (2× 0,5L)";
+            await addDrink(1.0);
+          }
+        } catch (e) {
+          hintEl.textContent = "Sync-Fehler – ggf. lokal gepuffert.";
+        } finally {
+          rouletteRunning = false;
+          btn.disabled = false;
+        }
+      }, spinTime);
     }
-  }
 
-  function renderStatsFromData(data) {
-    const createdMs = new Date(data.created).getTime();
-    const hours = Math.max(0.001, (Date.now() - createdMs) / 1000 / 3600);
+    /* ---------- Winner Overlay ---------- */
+    function showWinnerOverlay(playerNumber) {
+      const ov = document.getElementById("winnerOverlay");
+      const title = document.getElementById("winnerTitle");
+      const sub = document.getElementById("winnerSub");
 
-    const total = Number(data.total);
-    const today = Number(data.today);
+      if (title) title.textContent = `Spieler ${playerNumber} gewinnt!`;
+      if (sub) sub.textContent = `Glückwunsch!`;
 
-    const lph = total / hours;
-    const level = Math.floor(total / 5);
-
-    document.getElementById('statsContent').innerHTML = `
-      <div class="stat-card">
-        <div class="stat-top">
-          <div>
-            <div class="stat-value">${total.toFixed(1)} L</div>
-            <div class="stat-label">🍺 Gesamt getrunken</div>
-          </div>
-          <div class="stat-icon">🍻</div>
-        </div>
-        <div class="stat-sub">Seit ${Math.round(hours)} Std · Level ${level}</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-top">
-          <div>
-            <div class="stat-value">${today.toFixed(1)} L</div>
-            <div class="stat-label">📅 Heute</div>
-          </div>
-          <div class="stat-icon">📅</div>
-        </div>
-        <div class="stat-sub">Tageswert — frisch gezählt</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-top">
-          <div>
-            <div class="stat-value">${lph.toFixed(2)} L/h</div>
-            <div class="stat-label">⏱️ Liter pro Stunde</div>
-          </div>
-          <div class="stat-icon">⚡</div>
-        </div>
-        <div class="stat-sub">Durchschnitt seit Beginn</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-top">
-          <div>
-            <div class="stat-value">${level}</div>
-            <div class="stat-label">🤪 Bierwagen-Level</div>
-          </div>
-          <div class="stat-icon">🏆</div>
-        </div>
-        <div class="stat-sub">Je 5 L ein Level</div>
-      </div>
-    `;
-
-    latestStats = { total, today, lph, level, updatedAt: new Date() };
-
-    if (!document.getElementById("overviewView").classList.contains("hidden")) {
-      updateOverviewKPIs();
+      if (ov) ov.style.display = "flex";
     }
-  }
-function showWinnerOverlay(playerNumber) {
-  const ov = document.getElementById("winnerOverlay");
-  const title = document.getElementById("winnerTitle");
-  const sub = document.getElementById("winnerSub");
 
-  if (title) title.textContent = `Spieler ${playerNumber} gewinnt!`;
-  if (sub) sub.textContent = `Glückwunsch!`;
+    function closeWinnerOverlay() {
+      const ov = document.getElementById("winnerOverlay");
+      if (ov) ov.style.display = "none";
+    }
 
-  if (ov) ov.style.display = "flex";
-}
+    /* ---------- RACE ---------- */
+    let raceData = [];
+    let finishDistance = 10;
+    let selectedPlayer = null;
 
-function closeWinnerOverlay() {
-  const ov = document.getElementById("winnerOverlay");
-  if (ov) ov.style.display = "none";
-}
+    let moveHistory = [];
+    let drinkBusy = false;
 
-  function updateOverviewKPIs(){
-    if (!latestStats) return;
+    function startRace() {
+      window.GAME_ACTIVE = true;
 
-    document.getElementById("ov-total").textContent = `${latestStats.total.toFixed(1)} L`;
-    document.getElementById("ov-today").textContent = `${latestStats.today.toFixed(1)} L`;
-    document.getElementById("ov-lph").textContent   = `${latestStats.lph.toFixed(2)} L/h`;
-    document.getElementById("ov-level").textContent = `${latestStats.level}`;
+      const count = Number(document.getElementById('players').value);
+      finishDistance = Number(document.getElementById('distance').value);
 
-    document.getElementById("ov-partycode").textContent = `Party: ${ROOM_CODE}`;
-    document.getElementById("ov-updated").textContent = `Update: ${latestStats.updatedAt.toLocaleTimeString()}`;
-  }
+      raceData = [];
+      moveHistory = [];
+      selectedPlayer = null;
 
-  /* ---------- RACE ---------- */
-let raceData = [];
-let finishDistance = 10;
-let selectedPlayer = null;
+      document.getElementById('track').innerHTML = '';
+      document.getElementById('playerPicker').innerHTML = '';
 
-let moveHistory = []; // Stack für Undo
-let drinkBusy = false; // verhindert Doppelklick-Spam (FEHLTE bei dir!)
+      document.getElementById('raceSetup').classList.add('hidden');
+      document.getElementById('raceUI').classList.remove('hidden');
 
- function startRace() {
-  window.GAME_ACTIVE = true;
+      document.getElementById('actionPanel').classList.add('hidden');
+      document.getElementById('selectedPlayerLabel').innerText = '-';
 
-  const count = Number(document.getElementById('players').value);
-  finishDistance = Number(document.getElementById('distance').value);
+      for (let i = 0; i < count; i++) {
+        raceData.push({ points: 0, color: `hsl(${i * 360 / count}, 80%, 60%)` });
 
-  raceData = [];
-  moveHistory = [];
-  selectedPlayer = null;
+        const lane = document.createElement('div');
+        lane.className = 'lane';
 
-  document.getElementById('track').innerHTML = '';
-  document.getElementById('playerPicker').innerHTML = '';
+        const car = document.createElement('div');
+        car.className = 'car';
+        car.style.background = raceData[i].color;
+        car.id = 'car-' + i;
 
-  // Setup ausblenden, Race-UI einblenden
-  document.getElementById('raceSetup').classList.add('hidden');
-  document.getElementById('raceUI').classList.remove('hidden');
+        lane.appendChild(car);
+        document.getElementById('track').appendChild(lane);
 
-  // ✅ WICHTIG: ActionPanel verstecken, weil noch kein Spieler gewählt ist
-  document.getElementById('actionPanel').classList.add('hidden');
-  document.getElementById('selectedPlayerLabel').innerText = '-';
+        const picker = document.createElement('button');
+        picker.className = 'player-btn';
+        picker.innerText = `Spieler ${i + 1}`;
+        picker.style.background = raceData[i].color;
 
-  for (let i = 0; i < count; i++) {
-    raceData.push({ points: 0, color: `hsl(${i * 360 / count}, 80%, 60%)` });
+        picker.onclick = () => {
+          selectedPlayer = i;
+          document.getElementById('selectedPlayerLabel').innerText = `Spieler ${i + 1}`;
+          document.getElementById('actionPanel').classList.remove('hidden');
+        };
 
-    const lane = document.createElement('div');
-    lane.className = 'lane';
-
-    const car = document.createElement('div');
-    car.className = 'car';
-    car.style.background = raceData[i].color;
-    car.id = 'car-' + i;
-
-    lane.appendChild(car);
-    document.getElementById('track').appendChild(lane);
-
-    const picker = document.createElement('button');
-    picker.className = 'player-btn';
-    picker.innerText = `Spieler ${i + 1}`;
-    picker.style.background = raceData[i].color;
-
-    picker.onclick = () => {
-      selectedPlayer = i;
-      document.getElementById('selectedPlayerLabel').innerText = `Spieler ${i + 1}`;
-
-      // ✅ jetzt darf das Panel erscheinen
-      document.getElementById('actionPanel').classList.remove('hidden');
-    };
-
-    document.getElementById('playerPicker').appendChild(picker);
-  }
-
-  if (!document.getElementById("overviewView").classList.contains("hidden")) {
-    mountGameIntoOverviewIfActive();
-  }
-}
-
- async function undoLastMove() {
-  if (drinkBusy) return;
-
-  if (!moveHistory.length) {
-    alert("Nichts zum Rückgängig machen.");
-    return;
-  }
-
-  const last = moveHistory.pop();
-  drinkBusy = true;
-
-  try {
-    // 1) Rennen zurück
-    raceData[last.player].points = Math.max(0, raceData[last.player].points - last.points);
-    redrawCarPosition(last.player);
-
-    // 2) Statistik zurück (nur wenn Backend negative Werte erlaubt!)
-    // Wenn dein Backend das nicht kann, kommentiere die nächsten 2 Zeilen aus.
-    await addDrink(-last.liters);
-
-  } catch (e) {
-    console.warn("Undo konnte nicht vollständig synchronisiert werden:", e);
-    // History zurückpushen, damit Undo nicht verloren geht
-    moveHistory.push(last);
-  } finally {
-    drinkBusy = false;
-  }
-}
-
-function redrawCarPosition(index) {
-  const car = document.getElementById('car-' + index);
-  if (!car) return;
-  const lane = car.parentElement;
-  const maxLeft = lane.clientWidth - car.clientWidth;
-
-  const progress = Math.min(raceData[index].points / finishDistance, 1);
-  const leftPx = Math.max(0, Math.round(maxLeft * progress));
-  car.style.left = leftPx + 'px';
-}
-
- async function giveDrink(points) {
-  if (selectedPlayer === null) {
-    alert("Bitte zuerst einen Spieler wählen.");
-    return;
-  }
-
-  if (drinkBusy) return;
-  drinkBusy = true;
-
-  try {
-    // erst Statistik syncen
-    await addDrink(0.5);
-
-    // dann History + Move
-    moveHistory.push({
-      player: selectedPlayer,
-      points,
-      liters: 0.5,
-      ts: Date.now()
-    });
-
-    moveCar(selectedPlayer, points);
-
-  } catch (e) {
-    console.error("giveDrink failed:", e);
-  } finally {
-    drinkBusy = false;
-  }
-}
-
-
-  function moveCar(index, points) {
-    raceData[index].points += points;
-
-    const car = document.getElementById('car-' + index);
-    const lane = car.parentElement;
-    const maxLeft = lane.clientWidth - car.clientWidth;
-
-    const progress = Math.min(raceData[index].points / finishDistance, 1);
-    const leftPx = Math.max(0, Math.round(maxLeft * progress));
-    car.style.left = leftPx + 'px';
-
-    if (raceData[index].points >= finishDistance) {
-      showWinnerOverlay(index + 1);
-      window.GAME_ACTIVE = false;
-      restoreGameToNormalPlace();
+        document.getElementById('playerPicker').appendChild(picker);
+      }
 
       if (!document.getElementById("overviewView").classList.contains("hidden")) {
         mountGameIntoOverviewIfActive();
       }
     }
-  }
 
- function resetRace() {
-  window.GAME_ACTIVE = false;
-  raceData = [];
-  moveHistory = [];
-  selectedPlayer = null;
+    function redrawCarPosition(index) {
+      const car = document.getElementById('car-' + index);
+      if (!car) return;
+      const lane = car.parentElement;
+      const maxLeft = lane.clientWidth - car.clientWidth;
 
-  document.getElementById('track').innerHTML = '';
-  document.getElementById('playerPicker').innerHTML = '';
-  document.getElementById('raceSetup').classList.remove('hidden');
-  document.getElementById('raceUI').classList.add('hidden');
-  document.getElementById('actionPanel').classList.add('hidden');
-  document.getElementById('selectedPlayerLabel').innerText = '-';
-}
-
-
-  /* ---------- GAME CONTAINER MANAGEMENT (Overview) ---------- */
-  const gameRootEl = document.getElementById("race");
-  const overviewHost = document.getElementById("overviewGameHost");
-  const originalGameParent = gameRootEl?.parentElement;
-  const originalGameNextSibling = gameRootEl?.nextSibling;
-
-  function isGameActive(){ return !!window.GAME_ACTIVE; }
-
-  function mountGameIntoOverviewIfActive(){
-    if (!gameRootEl || !overviewHost) return;
-
-    if (isGameActive()){
-      gameRootEl.classList.remove('hidden');
-      overviewHost.innerHTML = "";
-      overviewHost.appendChild(gameRootEl);
-    } else {
-      overviewHost.innerHTML = `
-        <div class="placeholder">
-          <div class="placeholder-title">Kein Minispiel aktiv</div>
-          <div class="placeholder-sub">Starte ein Spiel, dann erscheint es hier groß.</div>
-        </div>
-      `;
+      const progress = Math.min(raceData[index].points / finishDistance, 1);
+      const leftPx = Math.max(0, Math.round(maxLeft * progress));
+      car.style.left = leftPx + 'px';
     }
-  }
 
-  function restoreGameToNormalPlace(){
-    if (!gameRootEl || !originalGameParent) return;
+    async function undoLastMove() {
+      if (drinkBusy) return;
 
-    if (gameRootEl.parentElement !== originalGameParent){
-      if (originalGameNextSibling) originalGameParent.insertBefore(gameRootEl, originalGameNextSibling);
-      else originalGameParent.appendChild(gameRootEl);
+      if (!moveHistory.length) {
+        alert("Nichts zum Rückgängig machen.");
+        return;
+      }
+
+      const last = moveHistory.pop();
+      drinkBusy = true;
+
+      try {
+        raceData[last.player].points = Math.max(0, raceData[last.player].points - last.points);
+        redrawCarPosition(last.player);
+
+        await addDrink(-last.liters);
+      } catch (e) {
+        console.warn("Undo konnte nicht vollständig synchronisiert werden:", e);
+        moveHistory.push(last);
+      } finally {
+        drinkBusy = false;
+      }
     }
-  }
 
-  document.getElementById("btn-fullscreen")?.addEventListener("click", async () => {
-    try {
-      if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
-      else await document.exitFullscreen();
-    } catch (e) {
-      console.log("Fullscreen failed:", e);
+    async function giveDrink(points) {
+      if (selectedPlayer === null) {
+        alert("Bitte zuerst einen Spieler wählen.");
+        return;
+      }
+
+      if (drinkBusy) return;
+      drinkBusy = true;
+
+      try {
+        // Im Minispiel zählt jedes Getränk als 0,5L in der Statistik
+        await addDrink(0.5);
+
+        moveHistory.push({
+          player: selectedPlayer,
+          points,
+          liters: 0.5,
+          ts: Date.now()
+        });
+
+        moveCar(selectedPlayer, points);
+      } catch (e) {
+        console.error("giveDrink failed:", e);
+      } finally {
+        drinkBusy = false;
+      }
     }
-  });
 
-  /* ---------- Boot ---------- */
- document.addEventListener("DOMContentLoaded", () => {
-  // Startzustand korrekt setzen
-  if (isUnlocked()) {
-    showApp();
-    updatePartyPill();
-    setLiveState(true);
+    function moveCar(index, points) {
+      raceData[index].points += points;
 
-    setUserPill("Zugang OK");
-    showSection("race");
+      const car = document.getElementById('car-' + index);
+      const lane = car.parentElement;
+      const maxLeft = lane.clientWidth - car.clientWidth;
 
-    // Stats laden ohne UI zu blocken
-    loadStats().catch(() => {});
-    updateOverviewKPIs();
-    
-  startStatsAutoRefresh();
-  } else {
-    showLogin();
-    setUserPill("Gesperrt");
-  }
+      const progress = Math.min(raceData[index].points / finishDistance, 1);
+      const leftPx = Math.max(0, Math.round(maxLeft * progress));
+      car.style.left = leftPx + 'px';
 
-  // Login
-  document.getElementById("btnLogin")?.addEventListener("click", tryLoginWithPassword);
-  document.getElementById("loginPassword")?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") tryLoginWithPassword();
-  });
+      if (raceData[index].points >= finishDistance) {
+        showWinnerOverlay(index + 1);
+        window.GAME_ACTIVE = false;
+        restoreGameToNormalPlace();
 
-  // Logout
-  document.getElementById("btnLogout")?.addEventListener("click", () => {
-  lockApp();
-  stopStatsAutoRefresh();
+        if (!document.getElementById("overviewView").classList.contains("hidden")) {
+          mountGameIntoOverviewIfActive();
+        }
+      }
+    }
 
-  document.getElementById("loginPassword").value = "";
-  document.getElementById("loginError").textContent = "";
-  showLogin();
-  setUserPill("Gesperrt");
-});
+    function resetRace() {
+      window.GAME_ACTIVE = false;
+      raceData = [];
+      moveHistory = [];
+      selectedPlayer = null;
 
-});
+      document.getElementById('track').innerHTML = '';
+      document.getElementById('playerPicker').innerHTML = '';
+      document.getElementById('raceSetup').classList.remove('hidden');
+      document.getElementById('raceUI').classList.add('hidden');
+      document.getElementById('actionPanel').classList.add('hidden');
+      document.getElementById('selectedPlayerLabel').innerText = '-';
+    }
 
-</script>
-<div id="winnerOverlay" onclick="closeWinnerOverlay()">
-  <div id="winnerCard" onclick="event.stopPropagation()">
-    <div style="font-size:54px;">🏆</div>
-    <h3 id="winnerTitle">Spieler X gewinnt!</h3>
-    <div id="winnerSub">Glückwunsch! Neues Rennen starten?</div>
+    /* ---------- GAME CONTAINER MANAGEMENT (Overview) ---------- */
+    const gameRootEl = document.getElementById("race");
+    const overviewHost = document.getElementById("overviewGameHost");
+    const originalGameParent = gameRootEl?.parentElement;
+    const originalGameNextSibling = gameRootEl?.nextSibling;
 
-    <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-      <button onclick="closeWinnerOverlay()">OK</button>
-      <button class="ghost" onclick="closeWinnerOverlay(); resetRace();">Neues Rennen</button>
+    function isGameActive(){ return !!window.GAME_ACTIVE; }
+
+    function mountGameIntoOverviewIfActive(){
+      if (!gameRootEl || !overviewHost) return;
+
+      if (isGameActive()){
+        gameRootEl.classList.remove('hidden');
+        overviewHost.innerHTML = "";
+        overviewHost.appendChild(gameRootEl);
+      } else {
+        overviewHost.innerHTML = `
+          <div class="placeholder">
+            <div class="placeholder-title">Kein Minispiel aktiv</div>
+            <div class="placeholder-sub">Starte ein Spiel, dann erscheint es hier groß.</div>
+          </div>
+        `;
+      }
+    }
+
+    function restoreGameToNormalPlace(){
+      if (!gameRootEl || !originalGameParent) return;
+
+      if (gameRootEl.parentElement !== originalGameParent){
+        if (originalGameNextSibling) originalGameParent.insertBefore(gameRootEl, originalGameNextSibling);
+        else originalGameParent.appendChild(gameRootEl);
+      }
+    }
+
+    document.getElementById("btn-fullscreen")?.addEventListener("click", async () => {
+      try {
+        if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+        else await document.exitFullscreen();
+      } catch (e) {
+        console.log("Fullscreen failed:", e);
+      }
+    });
+
+    /* ---------- Boot ---------- */
+    document.addEventListener("DOMContentLoaded", () => {
+      updatePartyPill();
+
+      if (isUnlocked()) {
+        showApp();
+        setLiveState(true);
+
+        setUserPill("Zugang OK");
+        showSection("race");
+
+        loadStats().catch(() => {});
+        updateOverviewKPIs();
+
+        startStatsAutoRefresh();
+      } else {
+        showLogin();
+        setUserPill("Gesperrt");
+      }
+
+      // Login
+      document.getElementById("btnLogin")?.addEventListener("click", tryLoginWithPassword);
+      document.getElementById("loginPassword")?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") tryLoginWithPassword();
+      });
+
+      // Logout
+      document.getElementById("btnLogout")?.addEventListener("click", () => {
+        lockApp();
+        stopStatsAutoRefresh();
+
+        document.getElementById("loginPassword").value = "";
+        document.getElementById("loginError").textContent = "";
+
+        showLogin();
+        setUserPill("Gesperrt");
+      });
+    });
+  </script>
+
+  <div id="winnerOverlay" onclick="closeWinnerOverlay()">
+    <div id="winnerCard" onclick="event.stopPropagation()">
+      <div style="font-size:54px;">🏆</div>
+      <h3 id="winnerTitle">Spieler X gewinnt!</h3>
+      <div id="winnerSub">Glückwunsch! Neues Rennen starten?</div>
+
+      <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button onclick="closeWinnerOverlay()">OK</button>
+        <button class="ghost" onclick="closeWinnerOverlay(); resetRace();">Neues Rennen</button>
+      </div>
     </div>
   </div>
-</div>
-
-
 
 </body>
 </html>
