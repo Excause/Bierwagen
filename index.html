@@ -108,11 +108,15 @@
       margin: 10px 0;
     }
     /* Modern large stat cards */
+    /* Make the stat area a clean grid (remove the heavy outer panel) */
     #statsContent {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 18px;
       align-items: stretch;
+      background: transparent; /* override .stats-box darker background */
+      padding: 0;
+      margin: 8px 0 18px 0;
     }
 
     @media (max-width: 900px) {
@@ -124,17 +128,20 @@
     }
 
     .stat-card {
-      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-      border-radius: 14px;
-      padding: 18px;
-      min-height: 120px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+      border-radius: 12px;
+      padding: 20px;
+      min-height: 140px;
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      gap: 6px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
+      justify-content: space-between;
+      gap: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+      border: 1px solid rgba(255,255,255,0.04);
+      transition: transform 160ms ease, box-shadow 160ms ease;
     }
+
+    .stat-card:hover { transform: translateY(-6px); box-shadow: 0 14px 36px rgba(0,0,0,0.55); }
 
     .stat-top {
       display: flex;
@@ -143,14 +150,16 @@
     }
 
     .stat-icon {
-      font-size: 1.6rem;
+      font-size: 1.4rem;
       opacity: 0.95;
     }
 
     .stat-value {
-      font-size: 2.2rem;
+      font-size: 2.4rem;
       font-weight: 800;
       color: var(--light);
+      white-space: nowrap; /* keep number + unit on one line */
+      letter-spacing: -0.5px;
     }
 
     .stat-label {
