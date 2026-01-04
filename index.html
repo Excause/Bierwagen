@@ -467,7 +467,48 @@ function resetRace() {
       </div>
     `;
   }
+
+  // --- SUPABASE CLOUD STATS ---
+const SUPABASE_URL = "https://DEINPROJEKT.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_XXXXXXXXXXXX";
+
+// Party-Code (später machen wir UI dafür)
+let ROOM_CODE = localStorage.getItem("bierwagen_room") || "HB-2026";
+
+async function cloudGetStats() {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/get-stats`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_ANON_KEY,
+      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ code: ROOM_CODE }),
+  });
+
+  if (!res.ok) throw new Error(await res.text());
+  return await res.json();
+}
+
+async function cloudAddDrink(amount) {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/add-drink`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_ANON_KEY,
+      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ code: ROOM_CODE, amount }),
+  });
+
+  if (!res.ok) throw new Error(await res.text());
+  return await res.json();
+}
 </script>
 
 </body>
 </html>
+
+
+#sb_publishable_t3ZMUJeiE2ZKxDAQd1T87w_U1KE0nlg
+#https://vrthtvecnbhzgkkguaat.supabase.co
