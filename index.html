@@ -117,7 +117,7 @@
     <h1>🍺 Bierwagen Login</h1>
     <input id="user" placeholder="Benutzername" />
     <input id="pass" type="password" placeholder="Passwort" />
-    <button onclick="login()">Login</button>
+    <button type="button" onclick="login()">Login</button>
     <p id="loginError" style="color:#ffaaaa"></p>
   </div>
 </div>
@@ -167,17 +167,27 @@
   const VALID_PASS = "1234"; // später ändern
 
   function login() {
-    const u = document.getElementById('user').value;
-    const p = document.getElementById('pass').value;
+  try {
+    const u = (document.getElementById('user')?.value || "").trim();
+    const p = (document.getElementById('pass')?.value || "").trim();
+
+    console.log("Login attempt:", u); // Debug
 
     if (u === VALID_USER && p === VALID_PASS) {
       document.getElementById('login').classList.add('hidden');
       document.getElementById('app').classList.remove('hidden');
+
       loadStats();
+      showSection('race'); // damit direkt was angezeigt wird
     } else {
       document.getElementById('loginError').innerText = "Falsche Login-Daten";
     }
+  } catch (e) {
+    console.error("Login error:", e);
+    alert("Login-Fehler – schau in die Console (F12).");
   }
+}
+
 
   /* ---------------- NAV ---------------- */
   function showSection(id) {
@@ -277,3 +287,6 @@
 
 </body>
 </html>
+
+
+
